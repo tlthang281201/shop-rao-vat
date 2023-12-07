@@ -1,10 +1,5 @@
 "use client";
-import $ from "jquery";
-import DataTable from "datatables.net-dt";
-
 import Image from "next/image";
-import "datatables.net-dt/css/jquery.dataTables.css";
-import { useEffect, useRef } from "react";
 
 const productData = [
   {
@@ -122,10 +117,6 @@ const productData = [
 ];
 
 const TableTwo = () => {
-  useEffect(() => {
-    $("#mytable").DataTable({ retrieve: true });
-  }, []);
-
   return (
     // <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
     //   <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">

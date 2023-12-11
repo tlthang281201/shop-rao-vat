@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/supabase/supabase-config";
 import { useRouter } from "next/navigation";
 import { setCookie } from "cookies-next";
+import * as crypto from "crypto-js";
 const SignIn = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ const SignIn = () => {
   const isValidPassword = (value) => {
     setVerifiedMSG(null);
     if (value === null || value.length < 6) {
-      setMessage2("Mật khẩu phải lớn hơn 5 kí tự");
+      setMessage2("Mật khẩu phải ít nhất 6 kí tự");
       setPassword(null);
     } else {
       setMessage2(null);
@@ -40,20 +41,21 @@ const SignIn = () => {
   const signIn = async () => {
     setLoading(true);
     if (email && password) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
-      if (error) {
-        setLoading(false);
-        setErrors(
-          error.message.includes("Invalid login credentials")
-            ? "Thông tin đăng nhập không chính xác"
-            : null
-        );
+      const { data, error } = await supabase
+        .from("account_admin")
+        .select(`name,email,avatar,active,role(name)`)
+        .match({ email: email, password: crypto.MD5(password) });
+      if (data.length > 0) {
+        if (data[0].active) {
+          setCookie("admin", data[0]);
+          router.push("/admin");
+        } else {
+          setLoading(false);
+          setErrors("Tài khoản của bạn đã bị quản trị viên đình chỉ hoạt động");
+        }
       } else {
-        setCookie("admin", data.user);
-        router.push("/admin");
+        setLoading(false);
+        setErrors("Tài khoản hoặc mật khẩu không chính xác");
       }
     } else {
       setLoading(false);
@@ -219,8 +221,12 @@ const SignIn = () => {
                   className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
                 >
                   {loading ? (
-                    <div className="flex justify-center">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-solid border-t-transparent"></div>
+                    <div
+                      className="flex justify-center"
+                      style={{ alignItems: "center" }}
+                    >
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-solid border-t-transparent mr-3"></div>
+                      Đăng nhập
                     </div>
                   ) : (
                     "Đăng nhập"

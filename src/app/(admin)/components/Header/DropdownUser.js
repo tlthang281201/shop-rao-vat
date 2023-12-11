@@ -6,7 +6,7 @@ import { deleteCookie, getCookie } from "cookies-next";
 import { useRouter } from "next/navigation";
 const DropdownUser = (props) => {
   const router = useRouter();
-  const [admin, setAdmin] = useState();
+  const [admin, setAdmin] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const trigger = useRef(null);
@@ -14,14 +14,13 @@ const DropdownUser = (props) => {
 
   const logOut = async () => {
     props.setLoading(true);
-    const { error } = await supabase.auth.signOut();
     deleteCookie("admin");
     router.push("/signin/admin");
   };
   // close on click outside
   const getAdmin = async () => {
-    const data = (await supabase.auth.getSession()).data.session.user;
-    setAdmin(data);
+    const data = getCookie("admin");
+    setAdmin(JSON.parse(data));
   };
   useEffect(() => {
     getAdmin();
@@ -39,16 +38,15 @@ const DropdownUser = (props) => {
           <span className="block text-sm font-medium text-black dark:text-white">
             {admin?.email}
           </span>
-          <span className="block text-xs">Quản trị viên</span>
+          <span className="block text-xs">{admin?.role?.name}</span>
         </span>
 
-        <span className="h-12 w-12 rounded-full">
-          <Image
-            width={112}
-            height={112}
-            src={"/images/user/user-01.png"}
-            alt="User"
-          />
+        <span className="h-10 rounded-full flex">
+          {admin ? (
+            <Image width={100} height={100} src={admin?.avatar} alt="User" />
+          ) : (
+            ""
+          )}
         </span>
 
         <svg

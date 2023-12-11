@@ -15,6 +15,7 @@ const SwitcherThree = () => {
             type="checkbox"
             id="toggle3"
             className="sr-only"
+            checked={enabled}
             onChange={() => {
               setEnabled(!enabled);
             }}

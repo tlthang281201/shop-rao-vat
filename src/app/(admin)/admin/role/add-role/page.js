@@ -1,8 +1,8 @@
 "use client";
-import { supabase, supabaseAdmin } from "@/supabase/supabase-config";
+import { supabaseAdmin } from "@/supabase/supabase-config";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 
 const AddRole = () => {
   const [permissions, setPermissions] = useState({
@@ -28,17 +28,17 @@ const AddRole = () => {
     perm3: false,
     perm4: false,
   });
-  const [roleName, setRoleName] = useState(null);
-  const [description, setDescription] = useState(null);
+  const [data, setData] = useState({ roleName: null, description: null });
   const router = useRouter();
 
   const validateRole = (value) => {
-    let regex = /^(?! )[^\s][\s\S]*[^\s]$/;
+    let regex = /^[\S]+(?: [\S]+)*$/;
     let res = regex.test(value);
-    if (res) {
-      setRoleName(value.toUpperCase());
+    let name = value.replace(/\s/g, "");
+    if (res && name.length > 1) {
+      setData({ ...data, roleName: value.toUpperCase() });
     } else {
-      setRoleName(null);
+      setData({ ...data, roleName: null });
     }
   };
 
@@ -112,19 +112,19 @@ const AddRole = () => {
   };
 
   const handleSubmit = async () => {
-    if (!roleName) {
-      toast.error("Vui lòng nhập đúng cú pháp");
+    if (!data.roleName) {
+      toast.error("Vui lòng nhập dữ liệu");
       return;
     }
     var str = "";
     Object.entries(permissions).forEach(([permission, value]) => {
       if (value) {
-        str = str + permission + ",";
+        str = str + permission + "|";
       }
     });
     const { error } = await supabaseAdmin
       .from("role")
-      .insert({ name: roleName, desc: description, permission: str });
+      .insert({ name: data.roleName, desc: data.description, permission: str });
     if (!error) {
       toast.success("Tạo mới thành công");
       router.back();
@@ -165,7 +165,9 @@ const AddRole = () => {
                 </label>
                 <input
                   type="text"
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) =>
+                    setData({ ...data, description: e.target.value })
+                  }
                   className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
                 />
               </div>
@@ -216,6 +218,7 @@ const AddRole = () => {
                                 name="perm1"
                                 checked={allPerm.perm1}
                                 onChange={handleCheckboxAll}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -224,6 +227,7 @@ const AddRole = () => {
                                 name="viewSlide"
                                 checked={permissions.viewSlide}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -232,6 +236,7 @@ const AddRole = () => {
                                 name="addSlide"
                                 checked={permissions.addSlide}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -240,6 +245,7 @@ const AddRole = () => {
                                 name="editSlide"
                                 checked={permissions.editSlide}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -248,6 +254,7 @@ const AddRole = () => {
                                 name="deleteSlide"
                                 checked={permissions.deleteSlide}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                           </tr>
@@ -261,6 +268,7 @@ const AddRole = () => {
                                 name="perm2"
                                 checked={allPerm.perm2}
                                 onChange={handleCheckboxAll}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -269,6 +277,7 @@ const AddRole = () => {
                                 name="viewUser"
                                 checked={permissions.viewUser}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4"></td>
@@ -278,6 +287,7 @@ const AddRole = () => {
                                 name="editUser"
                                 checked={permissions.editUser}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -286,6 +296,7 @@ const AddRole = () => {
                                 name="deleteUser"
                                 checked={permissions.deleteUser}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                           </tr>
@@ -300,6 +311,7 @@ const AddRole = () => {
                                 name="perm3"
                                 checked={allPerm.perm3}
                                 onChange={handleCheckboxAll}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -308,6 +320,7 @@ const AddRole = () => {
                                 name="viewPCate"
                                 checked={permissions.viewPCate}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -316,6 +329,7 @@ const AddRole = () => {
                                 name="addPCate"
                                 checked={permissions.addPCate}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -324,6 +338,7 @@ const AddRole = () => {
                                 name="editPCate"
                                 checked={permissions.editPCate}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -332,6 +347,7 @@ const AddRole = () => {
                                 name="deletePCate"
                                 checked={permissions.deletePCate}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                           </tr>
@@ -345,6 +361,7 @@ const AddRole = () => {
                                 name="perm4"
                                 checked={allPerm.perm4}
                                 onChange={handleCheckboxAll}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -352,6 +369,7 @@ const AddRole = () => {
                                 type="checkbox"
                                 name="viewPost"
                                 checked={permissions.viewPost}
+                                style={{ borderRadius: "3px" }}
                                 onChange={handleCheckboxChange}
                               />
                             </td>
@@ -361,6 +379,7 @@ const AddRole = () => {
                                 name="addPost"
                                 checked={permissions.addPost}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -369,6 +388,7 @@ const AddRole = () => {
                                 name="editPost"
                                 checked={permissions.editPost}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
@@ -377,6 +397,7 @@ const AddRole = () => {
                                 name="deletePost"
                                 checked={permissions.deletePost}
                                 onChange={handleCheckboxChange}
+                                style={{ borderRadius: "3px" }}
                               />
                             </td>
                           </tr>
@@ -390,7 +411,7 @@ const AddRole = () => {
 
             <button
               onClick={() => handleSubmit()}
-              className="flex  justify-center rounded bg-primary p-3 font-medium text-gray"
+              className="flex  justify-center rounded bg-primary p-3 font-medium text-white"
             >
               Thêm mới
             </button>

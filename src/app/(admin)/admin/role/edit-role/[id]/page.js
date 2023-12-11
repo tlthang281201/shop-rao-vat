@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+import Loading from "@/app/(admin)/components/common/Loading";
+import Alerts from "../../../ui/alerts/page";
 
 const EditRole = ({ params }) => {
-  const [data, setData] = useState([]);
-  const [roleName, setRoleName] = useState(null);
-  const [description, setDescription] = useState(null);
+  const [state, setState] = useState({ loading: true, error: null });
+  const [data, setData] = useState({ roleName: null, description: null });
   const [permissions, setPermissions] = useState({
     viewSlide: false,
     addSlide: false,
@@ -35,31 +36,37 @@ const EditRole = ({ params }) => {
   };
   useEffect(() => {
     const fetchData = async () => {
-      const { data, error } = await supabaseAdmin
+      const { data } = await supabaseAdmin
         .from("role")
         .select()
         .eq("id", params.id);
-      setData(data);
-      setRoleName(data[0].name);
-      setDescription(data[0].desc);
-      setPermissions({
-        ...permissions,
-        viewSlide: checkRole(data, "viewSlide") ? true : false,
-        addSlide: checkRole(data, "addSlide") ? true : false,
-        editSlide: checkRole(data, "editSlide") ? true : false,
-        deleteSlide: checkRole(data, "deleteSlide") ? true : false,
-        viewUser: checkRole(data, "viewUser") ? true : false,
-        editUser: checkRole(data, "editUser") ? true : false,
-        deleteUser: checkRole(data, "deleteUser") ? true : false,
-        viewPCate: checkRole(data, "viewPCate") ? true : false,
-        addPCate: checkRole(data, "addPCate") ? true : false,
-        editPCate: checkRole(data, "editPCate") ? true : false,
-        deletePCate: checkRole(data, "deletePCate") ? true : false,
-        viewPost: checkRole(data, "viewPost") ? true : false,
-        addPost: checkRole(data, "addPost") ? true : false,
-        editPost: checkRole(data, "editPost") ? true : false,
-        deletePost: checkRole(data, "deletePost") ? true : false,
-      });
+      if (data.length > 0) {
+        setData({ roleName: data[0].name, description: data[0].desc });
+        setState({ ...state, loading: false });
+        setPermissions({
+          ...permissions,
+          viewSlide: checkRole(data, "viewSlide") ? true : false,
+          addSlide: checkRole(data, "addSlide") ? true : false,
+          editSlide: checkRole(data, "editSlide") ? true : false,
+          deleteSlide: checkRole(data, "deleteSlide") ? true : false,
+          viewUser: checkRole(data, "viewUser") ? true : false,
+          editUser: checkRole(data, "editUser") ? true : false,
+          deleteUser: checkRole(data, "deleteUser") ? true : false,
+          viewPCate: checkRole(data, "viewPCate") ? true : false,
+          addPCate: checkRole(data, "addPCate") ? true : false,
+          editPCate: checkRole(data, "editPCate") ? true : false,
+          deletePCate: checkRole(data, "deletePCate") ? true : false,
+          viewPost: checkRole(data, "viewPost") ? true : false,
+          addPost: checkRole(data, "addPost") ? true : false,
+          editPost: checkRole(data, "editPost") ? true : false,
+          deletePost: checkRole(data, "deletePost") ? true : false,
+        });
+      } else {
+        setState({
+          loading: false,
+          error: "Lỗi! Không tìm thấy dữ liệu. Vui lòng kiểm tra lại id",
+        });
+      }
     };
     fetchData();
   }, [params.id]);
@@ -74,12 +81,13 @@ const EditRole = ({ params }) => {
   const router = useRouter();
 
   const validateRole = (value) => {
-    let regex = /^(?! )[^\s][\s\S]*[^\s]$/;
+    let regex = /^[\S]+(?: [\S]+)*$/;
     let res = regex.test(value);
-    if (res) {
-      setRoleName(value.toUpperCase());
+    let name = value.replace(/\s/g, "");
+    if (res && name.length > 1) {
+      setData({ ...data, roleName: value.toUpperCase() });
     } else {
-      setRoleName(null);
+      setData({ ...data, roleName: null });
     }
   };
 
@@ -186,19 +194,19 @@ const EditRole = ({ params }) => {
   };
 
   const handleSubmit = async () => {
-    if (!roleName) {
+    if (!data.roleName) {
       toast.error("Vui lòng nhập đúng cú pháp");
       return;
     }
     var str = "";
     Object.entries(permissions).forEach(([permission, value]) => {
       if (value) {
-        str = str + permission + ",";
+        str = str + permission + "|";
       }
     });
     const { error } = await supabaseAdmin
       .from("role")
-      .update({ name: roleName, desc: description, permission: str })
+      .update({ name: data.roleName, desc: data.description, permission: str })
       .eq("id", params.id);
     if (!error) {
       toast.success("Cập nhập thành công");
@@ -214,266 +222,295 @@ const EditRole = ({ params }) => {
 
   return (
     <>
-      <div className="flex flex-col gap-10">
-        <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-          <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
-            <h3 className="font-medium text-black dark:text-white">
-              Cập nhập quyền truy cập
-            </h3>
-          </div>
-          <div className="p-6.5">
-            <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
-              <div className="w-full xl:w-1/2">
-                <label className="mb-2.5 block text-black dark:text-white">
-                  Tên vai trò
-                </label>
-                <input
-                  type="text"
-                  value={roleName}
-                  onChange={(e) => validateRole(e.target.value)}
-                  style={{ textTransform: "uppercase" }}
-                  className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
-                />
-              </div>
-              <div className="w-full xl:w-1/2">
-                <label className="mb-2.5 block text-black dark:text-white">
-                  Mô tả
-                </label>
-                <input
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
-                />
-              </div>
+      {state.loading ? (
+        <div className="flex justify-center">
+          <Loading />
+        </div>
+      ) : state.error ? (
+        <Alerts message={state.error} />
+      ) : (
+        <div className="flex flex-col gap-10">
+          <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+            <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
+              <h3 className="font-medium text-black dark:text-white">
+                Cập nhập quyền truy cập
+              </h3>
             </div>
+            <div className="p-6.5">
+              <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
+                <div className="w-full xl:w-1/2">
+                  <label className="mb-2.5 block text-black dark:text-white">
+                    Tên vai trò
+                  </label>
+                  <input
+                    type="text"
+                    value={data.roleName}
+                    onChange={(e) => validateRole(e.target.value)}
+                    style={{ textTransform: "uppercase" }}
+                    className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                  />
+                </div>
+                <div className="w-full xl:w-1/2">
+                  <label className="mb-2.5 block text-black dark:text-white">
+                    Mô tả
+                  </label>
+                  <input
+                    type="text"
+                    value={data.description}
+                    onChange={(e) =>
+                      setData({ ...data, description: e.target.value })
+                    }
+                    className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                  />
+                </div>
+              </div>
 
-            <div className="mb-6">
-              <label className="mb-2.5 block text-black dark:text-white">
-                Phân quyền theo chức năng {params.id}
-              </label>
-              <div className="flex flex-col overflow-x-auto">
-                <div className="">
-                  <div className="inline-block min-w-full py-2 ">
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full text-left text-sm font-light">
-                        <thead
-                          className="border-b font-medium dark:border-neutral-500 text-white text-center"
-                          style={{ backgroundColor: "rgb(38 38 38)" }}
-                        >
-                          <tr>
-                            <th scope="col" className="px-6 py-4">
-                              #
-                            </th>
-                            <th scope="col" className="px-6 py-4">
-                              Tất cả
-                            </th>
-                            <th scope="col" className="px-6 py-4">
-                              Xem
-                            </th>
-                            <th scope="col" className="px-6 py-4">
-                              Thêm
-                            </th>
-                            <th scope="col" className="px-6 py-4">
-                              Sửa
-                            </th>
-                            <th scope="col" className="px-6 py-4">
-                              Xoá
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="border-b dark:border-neutral-500 text-center">
-                            <td className="whitespace-nowrap px-6 py-4 font-medium text-black ">
-                              Giao diện slide
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="perm1"
-                                checked={allPerm.perm1}
-                                onChange={handleCheckboxAll}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="viewSlide"
-                                checked={permissions.viewSlide}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="addSlide"
-                                checked={permissions.addSlide}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="editSlide"
-                                checked={permissions.editSlide}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="deleteSlide"
-                                checked={permissions.deleteSlide}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                          </tr>
-                          <tr className="border-b dark:border-neutral-500 text-center">
-                            <td className="whitespace-nowrap px-6 py-4 font-medium text-black ">
-                              Quản lý người dùng
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="perm2"
-                                checked={allPerm.perm2}
-                                onChange={handleCheckboxAll}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="viewUser"
-                                checked={permissions.viewUser}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4"></td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="editUser"
-                                checked={permissions.editUser}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="deleteUser"
-                                checked={permissions.deleteUser}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                          </tr>
+              <div className="mb-6">
+                <label className="mb-2.5 block text-black dark:text-white">
+                  Phân quyền theo chức năng
+                </label>
+                <div className="flex flex-col overflow-x-auto">
+                  <div className="">
+                    <div className="inline-block min-w-full py-2 ">
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full text-left text-sm font-light">
+                          <thead
+                            className="border-b font-medium dark:border-neutral-500 text-white text-center"
+                            style={{ backgroundColor: "rgb(38 38 38)" }}
+                          >
+                            <tr>
+                              <th scope="col" className="px-6 py-4">
+                                #
+                              </th>
+                              <th scope="col" className="px-6 py-4">
+                                Tất cả
+                              </th>
+                              <th scope="col" className="px-6 py-4">
+                                Xem
+                              </th>
+                              <th scope="col" className="px-6 py-4">
+                                Thêm
+                              </th>
+                              <th scope="col" className="px-6 py-4">
+                                Sửa
+                              </th>
+                              <th scope="col" className="px-6 py-4">
+                                Xoá
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-b dark:border-neutral-500 text-center">
+                              <td className="whitespace-nowrap px-6 py-4 font-medium text-black ">
+                                Giao diện slide
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="perm1"
+                                  checked={allPerm.perm1}
+                                  onChange={handleCheckboxAll}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="viewSlide"
+                                  checked={permissions.viewSlide}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="addSlide"
+                                  checked={permissions.addSlide}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="editSlide"
+                                  checked={permissions.editSlide}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="deleteSlide"
+                                  checked={permissions.deleteSlide}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                            </tr>
+                            <tr className="border-b dark:border-neutral-500 text-center">
+                              <td className="whitespace-nowrap px-6 py-4 font-medium text-black ">
+                                Quản lý người dùng
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="perm2"
+                                  checked={allPerm.perm2}
+                                  onChange={handleCheckboxAll}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="viewUser"
+                                  checked={permissions.viewUser}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4"></td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="editUser"
+                                  checked={permissions.editUser}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="deleteUser"
+                                  checked={permissions.deleteUser}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                            </tr>
 
-                          <tr className="border-b dark:border-neutral-500 text-center">
-                            <td className="whitespace-nowrap px-6 py-4 font-medium text-black ">
-                              Danh mục bài đăng
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="perm3"
-                                checked={allPerm.perm3}
-                                onChange={handleCheckboxAll}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="viewPCate"
-                                checked={permissions.viewPCate}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="addPCate"
-                                checked={permissions.addPCate}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="editPCate"
-                                checked={permissions.editPCate}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="deletePCate"
-                                checked={permissions.deletePCate}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                          </tr>
-                          <tr className="border-b dark:border-neutral-500 text-center">
-                            <td className="whitespace-nowrap px-6 py-4 font-medium text-black ">
-                              Quản lý bài đăng
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="perm4"
-                                checked={allPerm.perm4}
-                                onChange={handleCheckboxAll}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="viewPost"
-                                checked={permissions.viewPost}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="addPost"
-                                checked={permissions.addPost}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="editPost"
-                                checked={permissions.editPost}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-6 py-4">
-                              <input
-                                type="checkbox"
-                                name="deletePost"
-                                checked={permissions.deletePost}
-                                onChange={handleCheckboxChange}
-                              />
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                            <tr className="border-b dark:border-neutral-500 text-center">
+                              <td className="whitespace-nowrap px-6 py-4 font-medium text-black ">
+                                Danh mục bài đăng
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="perm3"
+                                  checked={allPerm.perm3}
+                                  onChange={handleCheckboxAll}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="viewPCate"
+                                  checked={permissions.viewPCate}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="addPCate"
+                                  checked={permissions.addPCate}
+                                  style={{ borderRadius: "3px" }}
+                                  onChange={handleCheckboxChange}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="editPCate"
+                                  checked={permissions.editPCate}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="deletePCate"
+                                  checked={permissions.deletePCate}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                            </tr>
+                            <tr className="border-b dark:border-neutral-500 text-center">
+                              <td className="whitespace-nowrap px-6 py-4 font-medium text-black ">
+                                Quản lý bài đăng
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="perm4"
+                                  checked={allPerm.perm4}
+                                  onChange={handleCheckboxAll}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="viewPost"
+                                  checked={permissions.viewPost}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="addPost"
+                                  checked={permissions.addPost}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="editPost"
+                                  checked={permissions.editPost}
+                                  onChange={handleCheckboxChange}
+                                  style={{ borderRadius: "3px" }}
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  name="deletePost"
+                                  checked={permissions.deletePost}
+                                  style={{ borderRadius: "3px" }}
+                                  onChange={handleCheckboxChange}
+                                />
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <button
-              onClick={() => handleSubmit()}
-              className="flex  justify-center rounded bg-primary p-3 font-medium text-gray"
-            >
-              Cập nhập
-            </button>
+              <button
+                onClick={() => handleSubmit()}
+                className="flex  justify-center rounded bg-primary p-3 font-medium text-white"
+              >
+                Cập nhập
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 };

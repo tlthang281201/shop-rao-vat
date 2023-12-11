@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
-import { getCookie } from "cookies-next";
+import { supabase } from "./supabase/supabase-config";
+import { setCookie } from "cookies-next";
 
-export function middleware(request) {
-  // if (request.nextUrl.pathname.startsWith("/admin")) {
-  //   if (getCookie("admin")) {
-  //     return NextResponse.next();
-  //   } else {
-  //     return NextResponse.redirect(new URL("/signin/admin", request.url));
-  //   }
-  // }
+export async function middleware(request) {
   let cookie = request.cookies.get("admin");
+  // Listen to inserts
+  // console.log(JSON.parse(cookie.value).role);
+
   if (request.nextUrl.pathname.startsWith("/admin")) {
     if (cookie) {
       return NextResponse.next();
@@ -25,3 +22,6 @@ export function middleware(request) {
     }
   }
 }
+export const config = {
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+};

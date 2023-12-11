@@ -3,13 +3,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 import { toast } from "sonner";
+
 import Loading from "@/app/(admin)/components/common/Loading";
-import { getAllCategory } from "@/services/CategoryService";
 import moment from "moment/moment";
-import ExpandCategory from "./expandedCategory";
-import CreateModal from "./modal.create";
 import { supabase } from "@/supabase/supabase-config";
-import UpdateModal from "./modal.update";
+import CreateChildrenModal from "./children.modal.create";
+import UpdateChildrenModal from "./children.modal.update";
 
 const customStyles = {
   header: {
@@ -34,7 +33,6 @@ const customStyles = {
         borderLeftWidth: "1px",
         borderLeftColor: "rgba(0, 0, 0, 0.12)",
       },
-      fontSize: "15px",
     },
   },
   cells: {
@@ -51,38 +49,31 @@ const customStyles = {
   },
 };
 
-const paginationComponentOptions = {
-  noRowsPerPage: true,
-  rowsPerPageText: "Số hàng mỗi trang",
-  selectAllRowsItem: true,
-  selectAllRowsItemText: "Tất cả",
-};
-
-const PostCategory = () => {
+const ExpandCategory = ({ data }) => {
   const [openModalCreate, setOpenModalCreate] = useState(false);
   const [openModalUpdate, setOpenModalUpdate] = useState(false);
-  const [category, setCategory] = useState(null);
-  const [data, setData] = useState([]);
+  const [categoryChildren, setCategoryChildren] = useState(null);
+  const [category, setCategory] = useState([]);
   const [pending, setPending] = useState(true);
 
   const fetchData = async () => {
-    const { data, error } = await getAllCategory();
-    setData(data);
+    const res = await supabase
+      .from("category_children")
+      .select()
+      .eq("parent", data.id)
+      .order("id", { ascending: true });
+    setCategory(res.data);
     setPending(false);
+    console.log(data);
   };
 
-  supabase
-    .channel("category_children")
-    .on(
-      "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "category_children" },
-      fetchData
-    )
-    .subscribe();
-
   const updateNewStatus = async (id, status) => {
+    if (id === 10) {
+      toast.error("Không thể cập nhập tài khoản ADMIN mặc định");
+      return;
+    }
     const { error } = await supabase
-      .from("category_parent")
+      .from("category_children")
       .update({ active: status })
       .eq("id", id);
     fetchData();
@@ -93,20 +84,20 @@ const PostCategory = () => {
 
   const deleteById = async (id) => {
     const { error } = await supabase
-      .from("category_parent")
+      .from("category_children")
       .delete()
       .eq("id", id);
     fetchData();
     if (!error) {
       toast.success("Xoá thành công");
     } else {
-      toast.error("Lỗi! Hãy xoá danh mục con trước");
+      toast.error("Lỗi!");
     }
   };
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [data]);
   const columns = useMemo(
     () => [
       {
@@ -177,8 +168,7 @@ const PostCategory = () => {
         cell: (row) => (
           <button
             onClick={() => {
-              setOpenModalUpdate(true);
-              setCategory(row);
+              setCategoryChildren(row), setOpenModalUpdate(true);
             }}
             style={{ color: "green" }}
           >
@@ -217,20 +207,22 @@ const PostCategory = () => {
     []
   );
   return (
-    <>
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h4
-          className="text-title-md2 font-semibold text-black"
-          style={{ textTransform: "uppercase", fontSize: "20px" }}
-        >
-          Danh sách danh mục
-        </h4>
+    <div
+      style={{
+        paddingTop: "10px",
+        paddingRight: "50px",
+        paddingLeft: "50px",
+        paddingBottom: "20px",
+        border: "1px solid rgba(0,0,0,0.12)",
+      }}
+    >
+      <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-title-md2 font-semibold text-black dark:text-white"></h2>
         <nav>
           <ol className="flex items-center gap-2">
             <li>
               <button
                 onClick={() => setOpenModalCreate(true)}
-                type="button"
                 className="flex items-center rounded bg-primary px-3 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white hover:bg-primary-600 "
               >
                 <svg
@@ -254,37 +246,38 @@ const PostCategory = () => {
         </nav>
       </div>
 
-      <div className="flex flex-col gap-10">
+      <div>
         <DataTable
           columns={columns}
           progressPending={pending}
           progressComponent={<Loading />}
-          data={data}
+          data={category}
           customStyles={customStyles}
-          pagination
-          paginationComponentOptions={paginationComponentOptions}
           persistTableHead
           noDataComponent={
-            <span className="text-danger pt-10">Không tìm thấy dữ liệu</span>
+            <span className="text-danger pt-5 pb-10">
+              Không tìm thấy dữ liệu
+            </span>
           }
-          expandableRows
-          expandableRowsComponent={ExpandCategory}
         />
       </div>
-      <CreateModal
-        openModal={openModalCreate}
+      <CreateChildrenModal
         fetchData={fetchData}
         setOpenModal={setOpenModalCreate}
+        openModal={openModalCreate}
+        parentId={data.id}
+        parentName={data.name}
       />
-      <UpdateModal
-        category={category}
-        openModal={openModalUpdate}
+      <UpdateChildrenModal
         fetchData={fetchData}
         setOpenModal={setOpenModalUpdate}
-        setCategory={setCategory}
+        openModal={openModalUpdate}
+        category={categoryChildren}
+        parentId={data.id}
+        parentName={data.name}
       />
-    </>
+    </div>
   );
 };
 
-export default PostCategory;
+export default ExpandCategory;

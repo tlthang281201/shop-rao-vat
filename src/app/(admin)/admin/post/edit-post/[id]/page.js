@@ -11,7 +11,7 @@ import Image from "next/image";
 import upImage from "@/utilities/UploadImage";
 import { addPost } from "@/services/PostService";
 
-const AddPost = () => {
+const EditPost = () => {
   const editorRef = useRef(null);
   const maxFileSize = 5 * 1024 * 1024;
   const [errors, setErrors] = useState({ des: null, image: null });
@@ -210,7 +210,7 @@ const AddPost = () => {
         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
             <h3 className="font-medium text-black dark:text-white">
-              Tạo mới bài đăng
+              Chỉnh sửa bài đăng
             </h3>
           </div>
           <form action={createInvoice}>
@@ -675,7 +675,7 @@ const AddPost = () => {
                 disabled={errors.des ? true : false}
                 className="flex justify-center rounded bg-primary p-3 mt-5 font-medium text-white disabled:cursor-not-allowed"
               >
-                Thêm mới
+                Cập nhập
               </button>
             </div>
           </form>
@@ -685,4 +685,4 @@ const AddPost = () => {
   );
 };
 
-export default AddPost;
+export default EditPost;

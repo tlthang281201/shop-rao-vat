@@ -43,7 +43,7 @@ const SignIn = () => {
     if (email && password) {
       const { data, error } = await supabase
         .from("account_admin")
-        .select(`name,email,avatar,active,role(name)`)
+        .select(`*,role(name)`)
         .match({ email: email, password: crypto.MD5(password) });
       if (data.length > 0) {
         if (data[0].active) {

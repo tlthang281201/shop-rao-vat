@@ -184,6 +184,7 @@ const ListAccount = () => {
           ) : (
             ""
           ),
+        width: "50px",
       },
       {
         button: true,
@@ -206,6 +207,7 @@ const ListAccount = () => {
           ) : (
             ""
           ),
+        width: "50px",
       },
     ],
     []

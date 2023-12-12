@@ -26,6 +26,7 @@ const CreateChildrenModal = ({
       description: data.des,
       active: data.active,
       parent: parentId,
+      updated_at: null,
     });
     if (!error) {
       fetchData();

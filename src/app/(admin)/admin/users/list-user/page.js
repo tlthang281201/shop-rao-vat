@@ -6,6 +6,7 @@ import Loading from "@/app/(admin)/components/common/Loading";
 import { getAllCategory } from "@/services/CategoryService";
 import moment from "moment/moment";
 import { supabase, supabaseAdmin } from "@/supabase/supabase-config";
+import { getAllUser } from "@/services/UsersService";
 
 const customStyles = {
   header: {
@@ -58,7 +59,7 @@ const ListUser = () => {
   const [pending, setPending] = useState(true);
 
   const fetchData = async () => {
-    const { data, error } = await getAllCategory();
+    const { data } = await getAllUser();
     setData(data);
     setPending(false);
   };
@@ -87,43 +88,48 @@ const ListUser = () => {
     }
   };
 
-  const alluser = async () => {
-    const {
-      data: { users },
-      error,
-    } = await supabaseAdmin.auth.admin.listUsers();
-    console.log(users);
-  };
   useEffect(() => {
     fetchData();
-    alluser();
   }, []);
   const columns = useMemo(
     () => [
       {
-        name: "Tên danh mục",
+        name: "Họ và tên",
         selector: (row) => row.name,
         sortable: true,
         wrap: true,
         width: "170px",
       },
       {
-        name: "Mô tả",
-        selector: (row) => row.description,
+        name: "Điện thoại",
+        selector: (row) => row.phone,
         wrap: true,
-        width: "210px",
+        width: "130px",
       },
 
       {
-        name: "Ngày tạo",
-        selector: (row) => row.created_at,
+        name: "Thành phố",
+        selector: (row) => row.city?.name,
         wrap: true,
         sortable: true,
-        width: "220px",
-        format: (row) => moment(row.created_at).format("DD/MM/YYYY, HH:mm:ss"),
+        width: "200px",
       },
       {
-        name: "Trạng thái",
+        name: "Quận/huyện",
+        selector: (row) => row.district?.name,
+        wrap: true,
+        sortable: true,
+        width: "180px",
+      },
+      {
+        name: "Phường/Xã",
+        selector: (row) => row.ward?.name,
+        wrap: true,
+        sortable: true,
+        width: "180px",
+      },
+      {
+        name: "Hoạt động",
         button: "true",
         cell: (row) =>
           row.active ? (
@@ -175,7 +181,7 @@ const ListUser = () => {
               setOpenModalUpdate(true);
               setCategory(row);
             }}
-            style={{ color: "blue" }}
+            style={{ color: "green" }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -188,6 +194,7 @@ const ListUser = () => {
             </svg>
           </a>
         ),
+        width: "50px",
       },
       {
         button: "true",
@@ -211,6 +218,7 @@ const ListUser = () => {
             </svg>
           </a>
         ),
+        width: "50px",
       },
     ],
     []

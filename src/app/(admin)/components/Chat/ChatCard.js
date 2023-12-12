@@ -4,51 +4,27 @@ import Image from "next/image";
 const chatData = [
   {
     avatar: "/images/user/user-01.png",
-    name: "Devid Heilo",
-    text: "How are you?",
+    name: "Ngô văn thắng",
+    text: "Bạn khoẻ không?",
     time: 12,
     textCount: 3,
     dot: 3,
   },
   {
     avatar: "/images/user/user-02.png",
-    name: "Henry Fisher",
-    text: "Waiting for you!",
+    name: "Nguyễn Thuỳ Linh",
+    text: "Sản phẩm tốt",
     time: 12,
     textCount: 0,
     dot: 1,
   },
   {
     avatar: "/images/user/user-04.png",
-    name: "Jhon Doe",
-    text: "What's up?",
+    name: "Trần Thị Thanh",
+    text: "Giao diện mượt mà",
     time: 32,
     textCount: 0,
     dot: 3,
-  },
-  {
-    avatar: "/images/user/user-05.png",
-    name: "Jane Doe",
-    text: "Great",
-    time: 32,
-    textCount: 2,
-    dot: 6,
-  },
-  {
-    avatar: "/images/user/user-01.png",
-    name: "Jhon Doe",
-    text: "How are you?",
-    time: 32,
-    textCount: 0,
-    dot: 3,
-  },
-  {
-    avatar: "/images/user/user-03.png",
-    name: "Jhon Doe",
-    text: "How are you?",
-    time: 32,
-    textCount: 3,
-    dot: 6,
   },
 ];
 
@@ -56,7 +32,7 @@ const ChatCard = () => {
   return (
     <div className="col-span-12 rounded-sm border border-stroke bg-white py-6 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-4">
       <h4 className="mb-6 px-7.5 text-xl font-semibold text-black dark:text-white">
-        Chats
+        Tin nhắn
       </h4>
 
       <div>

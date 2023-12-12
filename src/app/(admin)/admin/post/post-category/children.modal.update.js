@@ -1,6 +1,7 @@
 import Switcher from "@/app/(admin)/components/Switchers/Switch";
 import { supabaseAdmin } from "@/supabase/supabase-config";
 import CreateSlug from "@/utilities/CreateSlug";
+import { getCookie } from "cookies-next";
 import {
   Button,
   Label,
@@ -20,6 +21,7 @@ const UpdateChildrenModal = ({
   parentId,
   parentName,
 }) => {
+  const [id, setId] = useState("");
   const [categories, setCategories] = useState([]);
   const [data, setData] = useState({
     name: "",
@@ -40,6 +42,8 @@ const UpdateChildrenModal = ({
       active: category?.active,
       parent: parentId,
     });
+    const admin = JSON.parse(getCookie("admin"));
+    setId(admin.id);
   }, [category]);
 
   const [errors, setErrors] = useState({ name: null, des: null });
@@ -57,6 +61,8 @@ const UpdateChildrenModal = ({
         description: data.des,
         active: data.active,
         parent: data.parent,
+        updated_at: new Date(),
+        updated_by: id,
       })
       .eq("id", category.id);
     if (!error) {

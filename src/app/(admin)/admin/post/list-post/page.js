@@ -1,11 +1,13 @@
 "use client";
-import { supabase } from "@/supabase/supabase-config";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
+import { toast } from "sonner";
 import Loading from "@/app/(admin)/components/common/Loading";
 import moment from "moment/moment";
-import { toast } from "sonner";
+import { supabase } from "@/supabase/supabase-config";
+import { getAllPost } from "@/services/PostService";
+import Image from "next/image";
 
 const customStyles = {
   header: {
@@ -30,6 +32,16 @@ const customStyles = {
         borderLeftWidth: "1px",
         borderLeftColor: "rgba(0, 0, 0, 0.12)",
       },
+      "&:nth-last-child(2)": {
+        position: "sticky",
+        right: "50px",
+        backgroundColor: "#fff",
+      },
+      "&:last-child": {
+        position: "sticky",
+        right: "0",
+        backgroundColor: "#fff",
+      },
       fontSize: "15px",
     },
   },
@@ -43,7 +55,16 @@ const customStyles = {
         borderLeftWidth: "1px",
         borderLeftColor: "rgba(0, 0, 0, 0.12)",
       },
-      fontSize: "15px",
+      "&:nth-last-child(2)": {
+        position: "sticky",
+        right: "50px",
+        backgroundColor: "#fff",
+      },
+      "&:last-child": {
+        position: "sticky",
+        right: "0",
+        backgroundColor: "#fff",
+      },
     },
   },
 };
@@ -55,26 +76,53 @@ const paginationComponentOptions = {
   selectAllRowsItemText: "Tất cả",
 };
 
-const ListRole = () => {
+const ListPost = () => {
+  const [category, setCategory] = useState(null);
   const [data, setData] = useState([]);
   const [pending, setPending] = useState(true);
 
   const fetchData = async () => {
-    const { data, error } = await supabase
-      .from("role")
-      .select()
-      .order("id", { ascending: false });
+    const { data, error } = await getAllPost();
     setData(data);
     setPending(false);
+    console.log(data);
   };
 
-  const deleteRole = async (id) => {
-    const { error } = await supabase.from("role").delete().eq("id", id);
+  supabase
+    .channel("post")
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "post" },
+      fetchData
+    )
+    .on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table: "post" },
+      fetchData
+    )
+    .subscribe();
+
+  const updateNewStatus = async (id, status) => {
+    const { error } = await supabase
+      .from("category_parent")
+      .update({ active: status })
+      .eq("id", id);
+    fetchData();
+    if (error) {
+      toast.error(`Lỗi ${error}`);
+    }
+  };
+
+  const deleteById = async (id) => {
+    const { error } = await supabase
+      .from("category_parent")
+      .delete()
+      .eq("id", id);
     fetchData();
     if (!error) {
       toast.success("Xoá thành công");
     } else {
-      toast.error("Lỗi! Có tài khoản sử dụng role này. Vui lòng kiểm tra lại");
+      toast.error("Lỗi! Hãy xoá danh mục con trước");
     }
   };
 
@@ -84,39 +132,75 @@ const ListRole = () => {
   const columns = useMemo(
     () => [
       {
-        name: "STT",
-        selector: (row, index) => index + 1,
-        sortable: true,
+        name: "Hình ảnh",
         wrap: true,
-        width: "100px",
+        width: "120px",
+        cell: (row) => (
+          <Image
+            src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${row.images[0]}`}
+            width={120}
+            height={50}
+            style={{ height: "70px" }}
+          />
+        ),
       },
       {
-        name: "Tên vai trò",
-        selector: (row) => row.name,
+        name: "Tên liên hệ",
+        selector: (row) => row.fullname,
         sortable: true,
         wrap: true,
-        width: "220px",
+        width: "150px",
       },
       {
-        name: "Mô tả",
-        selector: (row) => row.desc,
+        name: "Điện thoại",
+        selector: (row) => row.phone,
         sortable: true,
         wrap: true,
-        width: "220px",
+        width: "150px",
       },
       {
-        name: "Ngày tạo",
+        name: "Chủ đề",
+        selector: (row) => row.cate_c_id.name,
+        sortable: true,
+        wrap: true,
+        width: "130px",
+      },
+      {
+        name: "Tiêu đề",
+        selector: (row) => row.title,
+        sortable: true,
+        wrap: true,
+        width: "210px",
+      },
+      {
+        name: "Tỉnh/thành",
+        selector: (row) => row.city.name,
+        sortable: true,
+        wrap: true,
+        width: "180px",
+      },
+      {
+        name: "Quận/huyện",
+        selector: (row) => row.district.name,
+        sortable: true,
+        wrap: true,
+        width: "180px",
+      },
+
+      {
+        name: "Ngày đăng",
         selector: (row) => row.created_at,
         wrap: true,
         sortable: true,
         width: "220px",
         format: (row) => moment(row.created_at).format("DD/MM/YYYY, HH:mm:ss"),
       },
+
       {
-        button: true,
+        button: "true",
         cell: (row) => (
           <Link
-            href={"/admin/role/edit-role/" + row.id}
+            href={`/admin/post/edit-post/${row.id}`}
             style={{ color: "green" }}
           >
             <svg
@@ -133,13 +217,9 @@ const ListRole = () => {
         width: "50px",
       },
       {
-        button: true,
+        button: "true",
         cell: (row) => (
-          <a
-            href="#"
-            onClick={() => deleteRole(row.id)}
-            className="text-danger"
-          >
+          <button onClick={() => deleteById(row.id)} className="text-danger">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -152,7 +232,7 @@ const ListRole = () => {
                 clipRule="evenodd"
               />
             </svg>
-          </a>
+          </button>
         ),
         width: "50px",
       },
@@ -166,15 +246,15 @@ const ListRole = () => {
           className="text-title-md2 font-semibold text-black"
           style={{ textTransform: "uppercase", fontSize: "20px" }}
         >
-          Danh sách phân quyền
+          Danh sách bài đăng
         </h4>
         <nav>
           <ol className="flex items-center gap-2">
             <li>
-              <Link
-                href={"/admin/role/add-role"}
+              <button
+                onClick={() => setOpenModalCreate(true)}
                 type="button"
-                className="flex items-center rounded bg-primary px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white hover:bg-primary-600 "
+                className="flex items-center rounded bg-primary px-3 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white hover:bg-primary-600 "
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -182,7 +262,7 @@ const ListRole = () => {
                   viewBox="0 0 24 24"
                   strokeWidth="1.5"
                   stroke="currentColor"
-                  className="w-4 h-4 mr-2"
+                  className="w-4 h-4 mr-3"
                 >
                   <path
                     strokeLinecap="round"
@@ -191,7 +271,7 @@ const ListRole = () => {
                   />
                 </svg>
                 Thêm mới
-              </Link>
+              </button>
             </li>
           </ol>
         </nav>
@@ -216,4 +296,4 @@ const ListRole = () => {
   );
 };
 
-export default ListRole;
+export default ListPost;

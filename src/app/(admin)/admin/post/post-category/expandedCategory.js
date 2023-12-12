@@ -105,13 +105,13 @@ const ExpandCategory = ({ data }) => {
         selector: (row) => row.name,
         sortable: true,
         wrap: true,
-        width: "170px",
+        width: "160px",
       },
       {
         name: "Mô tả",
         selector: (row) => row.description,
         wrap: true,
-        width: "210px",
+        width: "180px",
       },
 
       {
@@ -119,8 +119,18 @@ const ExpandCategory = ({ data }) => {
         selector: (row) => row.created_at,
         wrap: true,
         sortable: true,
-        width: "220px",
+        width: "160px",
         format: (row) => moment(row.created_at).format("DD/MM/YYYY, HH:mm:ss"),
+      },
+      {
+        name: "Ngày cập nhập",
+        selector: (row) =>
+          row.updated_at
+            ? moment(row.updated_at).format("DD/MM/YYYY, HH:mm:ss")
+            : "",
+        wrap: true,
+        sortable: true,
+        width: "160px",
       },
       {
         name: "Hiển thị",
@@ -183,6 +193,7 @@ const ExpandCategory = ({ data }) => {
             </svg>
           </button>
         ),
+        width: "50px",
       },
       {
         button: "true",
@@ -202,6 +213,7 @@ const ExpandCategory = ({ data }) => {
             </svg>
           </button>
         ),
+        width: "50px",
       },
     ],
     []

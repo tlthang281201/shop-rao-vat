@@ -19,6 +19,7 @@ const CreateModal = ({ openModal, setOpenModal, fetchData }) => {
       slug: slug,
       description: data.des,
       active: data.active,
+      updated_at: null,
     });
     if (!error) {
       fetchData();

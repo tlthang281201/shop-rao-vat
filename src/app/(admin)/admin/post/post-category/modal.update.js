@@ -1,6 +1,7 @@
 import Switcher from "@/app/(admin)/components/Switchers/Switch";
 import { supabaseAdmin } from "@/supabase/supabase-config";
 import CreateSlug from "@/utilities/CreateSlug";
+import { getCookie } from "cookies-next";
 import { Button, Label, Modal, TextInput, Textarea } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -14,13 +15,15 @@ const UpdateModal = ({
 }) => {
   const [data, setData] = useState({ name: null, des: null, active: true });
   const [errors, setErrors] = useState({ name: null, des: null });
-
+  const [id, setId] = useState("");
   useEffect(() => {
     setData({
       name: category?.name,
       des: category?.description,
       active: category?.active,
     });
+    const admin = JSON.parse(getCookie("admin"));
+    setId(admin.id);
   }, [category]);
 
   const handleSubmit = async () => {
@@ -36,9 +39,12 @@ const UpdateModal = ({
         description: data.des,
         active: data.active,
         slug: slug,
+        updated_by: id,
+        updated_at: new Date(),
       })
       .eq("id", category.id);
     if (!error) {
+      fetchData();
       toast.success("Cập nhập thành công");
       setOpenModal(false);
     } else {

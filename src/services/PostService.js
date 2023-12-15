@@ -21,7 +21,7 @@ export async function addPost(data) {
     title,
     cate_p_id: pcid,
     cate_c_id: ccid,
-    price,
+    price: price ? price : null,
     district_id: district,
     city_id: city,
     ward_id: ward,
@@ -43,8 +43,18 @@ export async function getAllPost() {
     .select(
       `id,images,title,cate_c_id(name),price,city(name),district(name),ward(name),users(name),fullname,phone`
     )
-    .match({ is_show: true })
-    .gt("status", 0);
+    .match({ is_show: true, status: 1 });
+
+  return res;
+}
+
+export async function getAllApprovalPost() {
+  const res = await supabaseAdmin
+    .from("post")
+    .select(
+      `id,images,title,cate_c_id(name),price,city(name),district(name),ward(name),users(name),fullname,phone`
+    )
+    .match({ is_show: true, status: 0 });
 
   return res;
 }

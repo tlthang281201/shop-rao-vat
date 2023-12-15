@@ -194,7 +194,6 @@ const AddPost = () => {
       }));
     } else {
       const res = await addPost(data);
-      console.log(res);
       alert("Thành công");
     }
   }

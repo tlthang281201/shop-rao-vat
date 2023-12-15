@@ -3,10 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 import { toast } from "sonner";
 import Loading from "@/app/(admin)/components/common/Loading";
-import { getAllCategory } from "@/services/CategoryService";
 import moment from "moment/moment";
 import { supabase, supabaseAdmin } from "@/supabase/supabase-config";
-import { getAllUser } from "@/services/UsersService";
+import { getAllOrder } from "@/services/OrderService";
 
 const customStyles = {
   header: {
@@ -59,7 +58,7 @@ const ListOrder = () => {
   const [pending, setPending] = useState(true);
 
   const fetchData = async () => {
-    const { data } = await getAllUser();
+    const { data } = await getAllOrder();
     setData(data);
     setPending(false);
   };
@@ -74,6 +73,11 @@ const ListOrder = () => {
       toast.error(`Lỗi ${error}`);
     }
   };
+
+  const formatter = new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  });
 
   const deleteById = async (id) => {
     const { error } = await supabase
@@ -94,84 +98,52 @@ const ListOrder = () => {
   const columns = useMemo(
     () => [
       {
-        name: "Họ và tên",
-        selector: (row) => row.name,
+        name: "Người mua",
+        selector: (row) => row?.buyer_id?.name,
         sortable: true,
         wrap: true,
         width: "170px",
       },
       {
-        name: "Điện thoại",
-        selector: (row) => row.phone,
+        name: "Người bán",
+        selector: (row) => row?.seller_id?.name,
+        sortable: true,
         wrap: true,
-        width: "130px",
+        width: "170px",
+      },
+      {
+        name: "Bài đăng",
+        selector: (row) => row?.post_id?.title,
+        sortable: true,
+        wrap: true,
+        width: "220px",
+      },
+      {
+        name: "Giá tiền",
+        selector: (row) =>
+          row?.post_id?.price
+            ? formatter.format(row?.post_id?.price)
+            : "Thoả thuận",
+        sortable: true,
+        wrap: true,
+        width: "170px",
+      },
+      {
+        name: "Ngày đặt",
+        selector: (row) =>
+          moment(row.created_at).format("DD/MM/YYYY, HH:mm:ss"),
+        sortable: true,
+        wrap: true,
+        width: "170px",
+      },
+      {
+        name: "Trạng thái",
+        selector: (row) => (row.status === 0 ? "Chưa xác nhận" : "Đã xác nhận"),
+        sortable: true,
+        wrap: true,
+        width: "170px",
       },
 
-      {
-        name: "Thành phố",
-        selector: (row) => row.city?.name,
-        wrap: true,
-        sortable: true,
-        width: "200px",
-      },
-      {
-        name: "Quận/huyện",
-        selector: (row) => row.district?.name,
-        wrap: true,
-        sortable: true,
-        width: "180px",
-      },
-      {
-        name: "Phường/Xã",
-        selector: (row) => row.ward?.name,
-        wrap: true,
-        sortable: true,
-        width: "180px",
-      },
-      {
-        name: "Hoạt động",
-        button: "true",
-        cell: (row) =>
-          row.active ? (
-            <a
-              href="#"
-              className="text-success"
-              onClick={() => updateNewStatus(row.id, false)}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </a>
-          ) : (
-            <a
-              href="#"
-              className="text-danger"
-              onClick={() => updateNewStatus(row.id, true)}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-6 h-6"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </a>
-          ),
-      },
       {
         button: "true",
         cell: (row) => (

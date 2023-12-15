@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import Loading from "@/app/(admin)/components/common/Loading";
 import moment from "moment/moment";
 import { supabase } from "@/supabase/supabase-config";
-import { getAllPost } from "@/services/PostService";
+import { getAllApprovalPost, getAllPost } from "@/services/PostService";
 import Image from "next/image";
 
 const customStyles = {
@@ -82,10 +82,9 @@ const ApprovalPost = () => {
   const [pending, setPending] = useState(true);
 
   const fetchData = async () => {
-    const { data, error } = await getAllPost();
+    const { data, error } = await getAllApprovalPost();
     setData(data);
     setPending(false);
-    console.log(data);
   };
 
   supabase
@@ -293,19 +292,23 @@ const ApprovalPost = () => {
       </div>
 
       <div className="flex flex-col gap-10">
-        <DataTable
-          columns={columns}
-          progressPending={pending}
-          progressComponent={<Loading />}
-          data={data}
-          customStyles={customStyles}
-          pagination
-          paginationComponentOptions={paginationComponentOptions}
-          persistTableHead
-          noDataComponent={
-            <span className="text-danger pt-10">Không tìm thấy dữ liệu</span>
-          }
-        />
+        {pending ? (
+          <div className="flex justify-center">
+            <Loading />
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={data}
+            customStyles={customStyles}
+            pagination
+            paginationComponentOptions={paginationComponentOptions}
+            persistTableHead
+            noDataComponent={
+              <span className="text-danger pt-10">Không tìm thấy dữ liệu</span>
+            }
+          />
+        )}
       </div>
     </>
   );

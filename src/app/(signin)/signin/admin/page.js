@@ -97,7 +97,7 @@ const SignIn = () => {
             style={{ border: "0.5px solid gray " }}
           >
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-              <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
+              <h2 className="mb-9 text-xl font-bold text-black dark:text-white sm:text-title-xl2">
                 Đăng nhập
               </h2>
               {verifiedMSG ? (

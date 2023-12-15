@@ -85,7 +85,6 @@ const ListPost = () => {
     const { data, error } = await getAllPost();
     setData(data);
     setPending(false);
-    console.log(data);
   };
 
   supabase
@@ -246,14 +245,13 @@ const ListPost = () => {
           className="text-title-md2 font-semibold text-black"
           style={{ textTransform: "uppercase", fontSize: "20px" }}
         >
-          Danh sách bài đăng
+          Danh sách bài đăng đã duyệt
         </h4>
         <nav>
           <ol className="flex items-center gap-2">
             <li>
-              <button
-                onClick={() => setOpenModalCreate(true)}
-                type="button"
+              <Link
+                href={"/admin/post/add-post"}
                 className="flex items-center rounded bg-primary px-3 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white hover:bg-primary-600 "
               >
                 <svg
@@ -271,26 +269,30 @@ const ListPost = () => {
                   />
                 </svg>
                 Thêm mới
-              </button>
+              </Link>
             </li>
           </ol>
         </nav>
       </div>
 
       <div className="flex flex-col gap-10">
-        <DataTable
-          columns={columns}
-          progressPending={pending}
-          progressComponent={<Loading />}
-          data={data}
-          customStyles={customStyles}
-          pagination
-          paginationComponentOptions={paginationComponentOptions}
-          persistTableHead
-          noDataComponent={
-            <span className="text-danger pt-10">Không tìm thấy dữ liệu</span>
-          }
-        />
+        {pending ? (
+          <div className="flex justify-center">
+            <Loading />
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={data}
+            customStyles={customStyles}
+            pagination
+            paginationComponentOptions={paginationComponentOptions}
+            persistTableHead
+            noDataComponent={
+              <span className="text-danger pt-10">Không tìm thấy dữ liệu</span>
+            }
+          />
+        )}
       </div>
     </>
   );

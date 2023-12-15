@@ -8,7 +8,7 @@ import moment from "moment/moment";
 import { supabase } from "@/supabase/supabase-config";
 import { getAllPost } from "@/services/PostService";
 import Image from "next/image";
-import { getAllSlide } from "@/services/SliderService";
+import { getAllCoinPrice } from "@/services/CoinService";
 
 const customStyles = {
   header: {
@@ -77,13 +77,13 @@ const paginationComponentOptions = {
   selectAllRowsItemText: "Tất cả",
 };
 
-const ListSlide = () => {
+const ListCoin = () => {
   const [category, setCategory] = useState(null);
   const [data, setData] = useState([]);
   const [pending, setPending] = useState(true);
 
   const fetchData = async () => {
-    const { data, error } = await getAllSlide();
+    const { data, error } = await getAllCoinPrice();
     setData(data);
     setPending(false);
   };
@@ -98,6 +98,11 @@ const ListSlide = () => {
       toast.error(`Lỗi ${error}`);
     }
   };
+
+  const formatter = new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  });
 
   const deleteById = async (id) => {
     const { error } = await supabase
@@ -118,23 +123,23 @@ const ListSlide = () => {
   const columns = useMemo(
     () => [
       {
-        name: "Hình ảnh",
+        name: "Giá tiền",
         wrap: true,
         width: "200px",
-        cell: (row) => (
-          <Image
-            src={`${row.url}`}
-            width={200}
-            height={120}
-            style={{ height: "70px" }}
-          />
-        ),
+        selector: (row) => formatter.format(row.price),
+      },
+
+      {
+        name: "Quy ra xu",
+        wrap: true,
+        width: "100px",
+        selector: (row) => row.coin,
       },
       {
-        name: "Mô tả",
-        wrap: true,
-        width: "200px",
-        selector: (row) => row.description,
+        name: "Trạng thái",
+        selector: (row) => (row.active ? "Hoạt động" : "Đã ẩn"),
+        sortable: true,
+        width: "150px",
       },
 
       {
@@ -206,7 +211,7 @@ const ListSlide = () => {
           className="text-title-md2 font-semibold text-black"
           style={{ textTransform: "uppercase", fontSize: "20px" }}
         >
-          Danh sách slide banner
+          Bảng giá quy đổi coin
         </h4>
         <nav>
           <ol className="flex items-center gap-2">
@@ -259,4 +264,4 @@ const ListSlide = () => {
   );
 };
 
-export default ListSlide;
+export default ListCoin;

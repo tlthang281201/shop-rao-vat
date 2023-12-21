@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import Loading from "@/app/(admin)/components/common/Loading";
-import Alerts from "../../../ui/alerts/page";
 
 const EditRole = ({ params }) => {
   const [state, setState] = useState({ loading: true, error: null });
@@ -227,7 +226,9 @@ const EditRole = ({ params }) => {
           <Loading />
         </div>
       ) : state.error ? (
-        <Alerts message={state.error} />
+        <div className="flex justify-center">
+          <span className="text-danger">{state.error}</span>
+        </div>
       ) : (
         <div className="flex flex-col gap-10">
           <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">

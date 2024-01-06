@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import Loading from "@/app/(admin)/components/common/Loading";
-import Alerts from "../../../ui/alerts/page";
+
 import Switcher from "@/app/(admin)/components/Switchers/Switch";
 import * as crypto from "crypto-js";
 import { updateAccount } from "@/services/AccountAdminService";
@@ -165,7 +165,7 @@ const EditAccount = ({ params }) => {
           <Loading />
         </div>
       ) : state.error ? (
-        <Alerts message={state.error} />
+        <div className="alert alert-danger">{state.error}</div>
       ) : (
         <div className="flex flex-col gap-10">
           <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">

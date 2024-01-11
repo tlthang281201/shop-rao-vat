@@ -4,6 +4,6 @@ export async function getAllUser() {
   const res = await supabase
     .from("users")
     .select(`*, city(name),district(name),ward(name)`)
-    .order("id", { ascending: true });
+    .order("created_at", { ascending: false });
   return res;
 }

@@ -1,15 +1,18 @@
 import Switcher from "@/app/(admin)/components/Switchers/Switch";
 import { supabaseAdmin } from "@/supabase/supabase-config";
 import CreateSlug from "@/utilities/CreateSlug";
+import upImage from "@/utilities/UpImageCategory";
 import { getCookie } from "cookies-next";
 import {
   Button,
+  FileInput,
   Label,
   Modal,
   Select,
   TextInput,
   Textarea,
 } from "flowbite-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -23,12 +26,29 @@ const UpdateChildrenModal = ({
 }) => {
   const [id, setId] = useState("");
   const [categories, setCategories] = useState([]);
+
+  const [image, setImage] = useState(null);
   const [data, setData] = useState({
     name: "",
     des: "",
     active: "",
     parent: "",
+    image: "",
   });
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      const fileName = await upImage(file);
+      setData({
+        ...data,
+        image: `https://weeevlktjgkhinnqsmai.supabase.co/storage/v1/object/public/post_images/category/${fileName}`,
+      });
+      console.log(fileName);
+    }
+  };
+
   const getAllCategory = async () => {
     const res = await supabaseAdmin.from("category_parent").select();
     setCategories(res.data);
@@ -41,6 +61,7 @@ const UpdateChildrenModal = ({
       des: category?.description,
       active: category?.active,
       parent: parentId,
+      image: category?.image,
     });
     const admin = JSON.parse(getCookie("admin"));
     setId(admin.id);
@@ -63,11 +84,13 @@ const UpdateChildrenModal = ({
         parent: data.parent,
         updated_at: new Date(),
         updated_by: id,
+        image: data.image,
       })
       .eq("id", category.id);
     if (!error) {
       toast.success("Cập nhập thành công");
       setOpenModal(false);
+      setImage(null);
     } else {
       if (error?.message.includes("duplicate")) {
         toast.error("Lỗi! Trùng tên danh mục");
@@ -93,7 +116,10 @@ const UpdateChildrenModal = ({
       style={{ zIndex: 99999 }}
       show={openModal}
       size="md"
-      onClose={() => setOpenModal(false)}
+      onClose={() => {
+        setOpenModal(false);
+        setImage(null);
+      }}
     >
       <Modal.Header>Cập nhập mục</Modal.Header>
       <Modal.Body>
@@ -131,6 +157,72 @@ const UpdateChildrenModal = ({
             ) : (
               ""
             )}
+          </div>
+
+          <div>
+            <div>
+              <div className="flex w-full items-center flex-row justify-between">
+                <Label>Hình ảnh</Label>
+                <Label
+                  htmlFor="dropzone-file"
+                  style={{
+                    border: "1px solid black",
+                    fontWeight: "bold",
+                    borderRadius: "10px",
+                    backgroundColor: "#FF5757",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                  className="flex flex-row items-center p-2 gap-1"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-6 h-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
+                    />
+                  </svg>
+                  <span>Chọn hình ảnh</span>
+                  <FileInput
+                    onChange={handleFileChange}
+                    id="dropzone-file"
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </Label>
+              </div>
+              {image ? (
+                <div className="mt-2">
+                  <Image
+                    priority={true}
+                    src={URL.createObjectURL(image)}
+                    width={100}
+                    height={100}
+                    alt="Selected"
+                    style={{ position: "relative" }}
+                  />
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <Image
+                    priority={true}
+                    src={data?.image}
+                    width={100}
+                    height={100}
+                    alt="Selected"
+                    style={{ position: "relative" }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div>

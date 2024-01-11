@@ -1,0 +1,146 @@
+import Slide from "@/app/(admin)/components/SlickSlide/Slide";
+
+import { formatter } from "@/utilities/utils";
+import {
+  Button,
+  FileInput,
+  Label,
+  Modal,
+  Select,
+  TextInput,
+} from "flowbite-react";
+import moment from "moment";
+
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import { useState } from "react";
+const ModalDetail = ({ openModal, setOpenModal, data }) => {
+  const [reason, setReason] = useState(null);
+
+  return (
+    <Modal
+      style={{ zIndex: 99999 }}
+      show={openModal}
+      size="3xl"
+      onClose={() => {
+        setOpenModal(false);
+      }}
+    >
+      <Modal.Header>Chi tiết bài đăng</Modal.Header>
+      <Modal.Body>
+        <div className="space-y-6">
+          <Slide data={data} />
+          <div style={{ border: "1px solid #d1d1d1", borderRadius: "5px" }}>
+            <div
+              style={{
+                color: "black",
+                fontWeight: "bold",
+                padding: "10px",
+                borderBottom: "1px solid #d1d1d1",
+              }}
+            >
+              THÔNG TIN CHUNG
+            </div>
+            <div className="mt-3">
+              <label
+                style={{
+                  fontWeight: "bold",
+                  padding: "10px",
+                  fontSize: "15px",
+                  color: "black",
+                }}
+              >
+                Tiêu đề:{" "}
+              </label>
+              <span style={{ color: "black", fontWeight: "bold" }}>
+                {data?.title}
+              </span>
+            </div>
+
+            <div className="flex flex-row" style={{ padding: "10px" }}>
+              <div
+                className="flex flex-col gap-2"
+                style={{ fontSize: "13px", color: "black" }}
+              >
+                <label style={{ fontWeight: "bold" }}>Loại danh mục: </label>
+                <label style={{ fontWeight: "bold" }}>Người đăng: </label>
+                <label style={{ fontWeight: "bold" }}>Giá: </label>
+              </div>
+              <div
+                className="flex flex-col gap-2"
+                style={{ fontSize: "13px", color: "black", marginLeft: "50px" }}
+              >
+                <span>{data?.cate_c_id?.name}</span>
+                <span>{data?.users?.name}</span>
+                <span style={{ color: "red", fontSize: "17px" }}>
+                  {formatter.format(data?.price)}
+                </span>
+              </div>
+              <div
+                className="flex flex-col gap-2"
+                style={{ fontSize: "13px", color: "black", marginLeft: "40px" }}
+              >
+                <label style={{ fontWeight: "bold" }}>Trạng thái bài: </label>
+                <label style={{ fontWeight: "bold" }}>Số điện thoại: </label>
+                <label style={{ fontWeight: "bold" }}>Ngày đăng: </label>
+              </div>
+              <div
+                className="flex flex-col gap-2"
+                style={{ fontSize: "13px", color: "black", marginLeft: "40px" }}
+              >
+                <span
+                  style={{ color: "red", fontSize: "17px", fontWeight: "bold" }}
+                  className="text-danger"
+                >
+                  {data?.status === 0
+                    ? "Chờ duyệt"
+                    : data?.status === 1
+                    ? "Đã duyệt"
+                    : "Bị từ chối"}
+                </span>
+                <span>{data?.phone}</span>
+                <span>
+                  {moment(data?.created_at).format("DD/MM/YYYY - H:m:ss")}
+                </span>
+              </div>
+            </div>
+            <div
+              className="flex flex-row px-3 pb-3"
+              style={{ color: "black", fontSize: "13px" }}
+            >
+              <div className="flex flex-col">
+                <label style={{ fontWeight: "bold" }}>Địa chỉ: </label>
+              </div>
+              <div className="flex flex-col" style={{ marginLeft: "97px" }}>
+                <span>
+                  {data?.address}, {data?.ward?.name}, {data?.district?.name},{" "}
+                  {data?.city?.name},{" "}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div style={{ border: "1px solid #d1d1d1", borderRadius: "5px" }}>
+            <div
+              style={{
+                color: "black",
+                fontWeight: "bold",
+                padding: "10px",
+                borderBottom: "1px solid #d1d1d1",
+              }}
+            >
+              MÔ TẢ CHI TIẾT
+            </div>
+            <form>
+              <p
+                style={{ color: "black", padding: "10px", fontSize: "13px" }}
+                dangerouslySetInnerHTML={{ __html: data?.description }}
+              ></p>
+            </form>
+          </div>
+        </div>
+      </Modal.Body>
+    </Modal>
+  );
+};
+
+export default ModalDetail;

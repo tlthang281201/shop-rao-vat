@@ -6,10 +6,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        suppressHydrationWarning={true}
-        style={{ backgroundColor: "white" }}
-      >
+      <body>
         <div>{children}</div>
       </body>
     </html>

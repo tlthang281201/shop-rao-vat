@@ -3,13 +3,14 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 import { toast } from "sonner";
-
 import Loading from "@/app/(admin)/components/common/Loading";
 import moment from "moment/moment";
 import { supabase } from "@/supabase/supabase-config";
-import CreateChildrenModal from "./children.modal.create";
-import UpdateChildrenModal from "./children.modal.update";
+import { getAllPost } from "@/services/PostService";
 import Image from "next/image";
+import { getAllSlide } from "@/services/SliderService";
+import ModalCreateSlide from "./ModalCreateSlide";
+import ModalUpdateSlide from "./ModalUpdateSlide";
 
 const customStyles = {
   header: {
@@ -34,6 +35,17 @@ const customStyles = {
         borderLeftWidth: "1px",
         borderLeftColor: "rgba(0, 0, 0, 0.12)",
       },
+      "&:nth-last-child(2)": {
+        position: "sticky",
+        right: "50px",
+        backgroundColor: "#fff",
+      },
+      "&:last-child": {
+        position: "sticky",
+        right: "0",
+        backgroundColor: "#fff",
+      },
+      fontSize: "15px",
     },
   },
   cells: {
@@ -46,35 +58,50 @@ const customStyles = {
         borderLeftWidth: "1px",
         borderLeftColor: "rgba(0, 0, 0, 0.12)",
       },
+      "&:nth-last-child(2)": {
+        position: "sticky",
+        right: "50px",
+        backgroundColor: "#fff",
+      },
+      "&:last-child": {
+        position: "sticky",
+        right: "0",
+        backgroundColor: "#fff",
+      },
     },
   },
 };
 
-const ExpandCategory = ({ data }) => {
-  const [openModalCreate, setOpenModalCreate] = useState(false);
-  const [openModalUpdate, setOpenModalUpdate] = useState(false);
-  const [categoryChildren, setCategoryChildren] = useState(null);
-  const [category, setCategory] = useState([]);
-  const [pending, setPending] = useState(true);
+const paginationComponentOptions = {
+  noRowsPerPage: true,
+  rowsPerPageText: "Số hàng mỗi trang",
+  selectAllRowsItem: true,
+  selectAllRowsItemText: "Tất cả",
+};
 
+const ListSlide = () => {
+  const [category, setCategory] = useState(null);
+  const [data, setData] = useState([]);
+  const [pending, setPending] = useState(false);
+
+  const [showModalCreate, setShowModalCreate] = useState(false);
+  const [showModalUpdate, setShowModalUpdate] = useState(false);
+  const [slide, setSlide] = useState(null);
   const fetchData = async () => {
-    const res = await supabase
-      .from("category_children")
-      .select()
-      .eq("parent", data.id)
-      .order("id", { ascending: true });
-    setCategory(res.data);
+    setPending(true);
+    const { data, error } = await getAllSlide();
+    setData(data);
     setPending(false);
-    console.log(data);
+  };
+
+  const openUpdateModal = (data) => {
+    setSlide(data);
+    setShowModalUpdate(true);
   };
 
   const updateNewStatus = async (id, status) => {
-    if (id === 10) {
-      toast.error("Không thể cập nhập tài khoản ADMIN mặc định");
-      return;
-    }
     const { error } = await supabase
-      .from("category_children")
+      .from("category_parent")
       .update({ active: status })
       .eq("id", id);
     fetchData();
@@ -84,49 +111,40 @@ const ExpandCategory = ({ data }) => {
   };
 
   const deleteById = async (id) => {
-    const { error } = await supabase
-      .from("category_children")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("slides").delete().eq("id", id);
     fetchData();
     if (!error) {
       toast.success("Xoá thành công");
     } else {
-      toast.error("Lỗi!");
+      toast.error(`Lỗi! ${error?.message}`);
     }
   };
 
   useEffect(() => {
     fetchData();
-  }, [data]);
+  }, []);
   const columns = useMemo(
     () => [
       {
         name: "Hình ảnh",
-        width: "100px",
+        wrap: true,
+        width: "200px",
         cell: (row) => (
-          <div className="py-2">
+          <div className="p-2">
             <Image
-              src={row.image}
-              width={50}
-              height={50}
-              style={{ objectFit: "cover" }}
+              src={`${row.url}`}
+              width={200}
+              height={120}
+              style={{ height: "70px" }}
             />
           </div>
         ),
       },
       {
-        name: "Tên danh mục",
-        selector: (row) => row.name,
-        sortable: true,
-        wrap: true,
-        width: "160px",
-      },
-      {
         name: "Mô tả",
-        selector: (row) => row.description,
         wrap: true,
-        width: "130px",
+        width: "200px",
+        selector: (row) => row.description,
       },
 
       {
@@ -134,7 +152,7 @@ const ExpandCategory = ({ data }) => {
         selector: (row) => row.created_at,
         wrap: true,
         sortable: true,
-        width: "160px",
+        width: "220px",
         format: (row) => moment(row.created_at).format("DD/MM/YYYY, HH:mm:ss"),
       },
       {
@@ -145,56 +163,15 @@ const ExpandCategory = ({ data }) => {
             : "",
         wrap: true,
         sortable: true,
-        width: "160px",
+        width: "220px",
       },
-      {
-        name: "Hiển thị",
-        button: "true",
-        cell: (row) =>
-          row.active ? (
-            <button
-              className="text-success"
-              onClick={() => updateNewStatus(row.id, false)}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-6 h-6"
-              >
-                <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
-                <path
-                  fillRule="evenodd"
-                  d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-          ) : (
-            <button
-              className="text-danger"
-              onClick={() => updateNewStatus(row.id, true)}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-6 h-6"
-              >
-                <path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.676 12.553a11.249 11.249 0 01-2.631 4.31l-3.099-3.099a5.25 5.25 0 00-6.71-6.71L7.759 4.577a11.217 11.217 0 014.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113z" />
-                <path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0115.75 12zM12.53 15.713l-4.243-4.244a3.75 3.75 0 004.243 4.243z" />
-                <path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 00-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 016.75 12z" />
-              </svg>
-            </button>
-          ),
-      },
+
       {
         button: "true",
         cell: (row) => (
-          <button
-            onClick={() => {
-              setCategoryChildren(row), setOpenModalUpdate(true);
-            }}
+          <Link
+            onClick={() => openUpdateModal(row)}
+            href={`#`}
             style={{ color: "green" }}
           >
             <svg
@@ -206,7 +183,7 @@ const ExpandCategory = ({ data }) => {
               <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
               <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
             </svg>
-          </button>
+          </Link>
         ),
         width: "50px",
       },
@@ -234,22 +211,48 @@ const ExpandCategory = ({ data }) => {
     []
   );
   return (
-    <div
-      style={{
-        paddingTop: "10px",
-        paddingRight: "50px",
-        paddingLeft: "50px",
-        paddingBottom: "20px",
-        border: "1px solid rgba(0,0,0,0.12)",
-      }}
-    >
-      <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-title-md2 font-semibold text-black dark:text-white"></h2>
+    <>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h4
+          className="text-title-md2 font-semibold text-black"
+          style={{
+            textTransform: "uppercase",
+            fontSize: "20px",
+            color: "rgb(28 36 52)",
+          }}
+        >
+          Danh sách slide banner
+        </h4>
         <nav>
           <ol className="flex items-center gap-2">
             <li>
-              <button
-                onClick={() => setOpenModalCreate(true)}
+              <Link
+                href="#"
+                onClick={() => fetchData()}
+                style={{ border: "1px solid gray" }}
+                className="flex items-center rounded bg-white px-3 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-black "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-4 h-4 mr-3"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+                  />
+                </svg>
+                Làm mới
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="#"
+                onClick={() => setShowModalCreate(true)}
                 className="flex items-center rounded bg-primary px-3 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white hover:bg-primary-600 "
               >
                 <svg
@@ -267,44 +270,44 @@ const ExpandCategory = ({ data }) => {
                   />
                 </svg>
                 Thêm mới
-              </button>
+              </Link>
             </li>
           </ol>
         </nav>
       </div>
 
-      <div>
-        <DataTable
-          columns={columns}
-          progressPending={pending}
-          progressComponent={<Loading />}
-          data={category}
-          customStyles={customStyles}
-          persistTableHead
-          noDataComponent={
-            <span className="text-danger pt-5 pb-10">
-              Không tìm thấy dữ liệu
-            </span>
-          }
-        />
+      <div className="flex flex-col gap-10">
+        {pending ? (
+          <div className="flex justify-center">
+            <Loading />
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={data}
+            customStyles={customStyles}
+            pagination
+            paginationComponentOptions={paginationComponentOptions}
+            persistTableHead
+            noDataComponent={
+              <span className="text-danger pt-10">Không tìm thấy dữ liệu</span>
+            }
+          />
+        )}
       </div>
-      <CreateChildrenModal
+      <ModalCreateSlide
+        openModal={showModalCreate}
+        setOpenModal={setShowModalCreate}
         fetchData={fetchData}
-        setOpenModal={setOpenModalCreate}
-        openModal={openModalCreate}
-        parentId={data.id}
-        parentName={data.name}
       />
-      <UpdateChildrenModal
+      <ModalUpdateSlide
+        openModal={showModalUpdate}
+        setOpenModal={setShowModalUpdate}
         fetchData={fetchData}
-        setOpenModal={setOpenModalUpdate}
-        openModal={openModalUpdate}
-        category={categoryChildren}
-        parentId={data.id}
-        parentName={data.name}
+        data={slide}
       />
-    </div>
+    </>
   );
 };
 
-export default ExpandCategory;
+export default ListSlide;

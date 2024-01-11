@@ -90,15 +90,27 @@ const SignIn = () => {
   // };
   return (
     <>
-      <div className="bg-white">
-        <div className="flex justify-center mt-5">
+      <div
+        className="bg-white"
+        style={{
+          backgroundImage: `url(
+            "https://t4.ftcdn.net/jpg/02/55/77/03/360_F_255770374_rbmJO9gkkIhMBcyVPc3iW016BCLDvcWc.jpg"
+          )`,
+          backgroundSize: "cover",
+          opacity: 0.8,
+        }}
+      >
+        <div className="justify-center">
           <div
-            className="w-full  xl:w-1/2 rounded "
-            style={{ border: "0.5px solid gray " }}
+            className="xl:w-1/2 rounded bg-white"
+            style={{
+              border: "0.5px solid gray ",
+              height: "100vh",
+            }}
           >
-            <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-              <h2 className="mb-9 text-xl font-bold text-black dark:text-white sm:text-title-xl2">
-                Đăng nhập
+            <div className="w-full sm:p-12.5" style={{ paddingTop: "120px" }}>
+              <h2 className="mb-9 font-bold text-black dark:text-white sm:text-title-xl2">
+                Đăng nhập hệ thống
               </h2>
               {verifiedMSG ? (
                 <div className="mb-5">

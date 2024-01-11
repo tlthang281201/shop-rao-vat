@@ -10,6 +10,7 @@ import ExpandCategory from "./expandedCategory";
 import CreateModal from "./modal.create";
 import { supabase } from "@/supabase/supabase-config";
 import UpdateModal from "./modal.update";
+import Image from "next/image";
 
 const customStyles = {
   header: {
@@ -109,6 +110,20 @@ const PostCategory = () => {
   }, []);
   const columns = useMemo(
     () => [
+      {
+        name: "Hình ảnh",
+        width: "100px",
+        cell: (row) => (
+          <div className="py-2">
+            <Image
+              src={row.image}
+              width={50}
+              height={50}
+              style={{ objectFit: "cover" }}
+            />
+          </div>
+        ),
+      },
       {
         name: "Tên danh mục",
         selector: (row) => row.name,
@@ -234,7 +249,11 @@ const PostCategory = () => {
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h4
           className="text-title-md2 font-semibold text-black"
-          style={{ textTransform: "uppercase", fontSize: "20px" }}
+          style={{
+            textTransform: "uppercase",
+            fontSize: "20px",
+            color: "rgb(28 36 52)",
+          }}
         >
           Danh sách danh mục
         </h4>

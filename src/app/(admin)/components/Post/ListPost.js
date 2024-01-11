@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 import { toast } from "sonner";
 import Loading from "@/app/(admin)/components/common/Loading";
-import moment from "moment/moment";
+import moment from "moment";
 import { supabase } from "@/supabase/supabase-config";
-import { getAllApprovalPost, getAllPost } from "@/services/PostService";
+import { getAllPost } from "@/services/PostService";
 import Image from "next/image";
 import { formatter } from "@/utilities/utils";
 import { Button, Modal } from "flowbite-react";
-import ModalDetail from "./modal.post";
+import ModalDetail from "./Modal";
 
 const customStyles = {
   header: {
@@ -58,6 +58,7 @@ const customStyles = {
         borderLeftWidth: "1px",
         borderLeftColor: "rgba(0, 0, 0, 0.12)",
       },
+
       "&:nth-last-child(2)": {
         position: "sticky",
         right: "50px",
@@ -79,44 +80,34 @@ const paginationComponentOptions = {
   selectAllRowsItemText: "Tất cả",
 };
 
-const ApprovalPost = () => {
+const ListPostComponent = () => {
   const [openModal, setOpenModal] = useState(false);
   const [openModal1, setOpenModal1] = useState(false);
-
-  const [post, setPost] = useState({});
-  const [id, setId] = useState(null);
+  const [post, setPost] = useState(null);
   const [data, setData] = useState([]);
   const [pending, setPending] = useState(true);
+  const [id, setId] = useState("");
 
   const fetchData = async () => {
-    const { data, error } = await getAllApprovalPost();
+    const { data, error } = await supabase
+      .from("post")
+      .select(
+        `*,id,images,title,cate_c_id(name),price,city(name),district(name),ward(name),users(name),fullname,phone`
+      )
+      .match({ is_show: true, status: 1, is_sold: false, is_selling: false })
+      .order("created_at", { ascending: false });
     setData(data);
     setPending(false);
   };
 
-  supabase
-    .channel("post")
-    .on(
-      "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "post" },
-      fetchData
-    )
-    .on(
-      "postgres_changes",
-      { event: "DELETE", schema: "public", table: "post" },
-      fetchData
-    )
-    .subscribe();
-
   const deleteById = async (id) => {
     const { error } = await supabase.from("post").delete().eq("id", id);
     fetchData();
+    setId(null);
     if (!error) {
-      setOpenModal(false);
       toast.success("Xoá thành công");
     } else {
-      setOpenModal(false);
-      toast.error(`Lỗi! ${error.message}`);
+      toast.error(`Lỗi! ${error?.message}`);
     }
   };
 
@@ -130,18 +121,18 @@ const ApprovalPost = () => {
         wrap: true,
         width: "120px",
         cell: (row) => (
-          <div className="py-2">
+          <div className="py-3">
             <Image
               src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${row.images[0]}`}
               width={120}
-              height={50}
-              style={{ height: "70px", objectFit: "cover" }}
+              height={90}
+              style={{ height: "100px" }}
             />
           </div>
         ),
       },
       {
-        name: "Tên liên hệ",
+        name: "Người đăng",
         selector: (row) => row.users.name,
         sortable: true,
         wrap: true,
@@ -155,18 +146,18 @@ const ApprovalPost = () => {
         width: "130px",
       },
       {
-        name: "Chủ đề",
+        name: "Danh mục",
         selector: (row) => row.cate_c_id.name,
         sortable: true,
         wrap: true,
-        width: "120px",
+        width: "110px",
       },
       {
         name: "Tiêu đề",
         selector: (row) => row.title,
         sortable: true,
         wrap: true,
-        width: "180px",
+        width: "210px",
       },
       {
         name: "Giá tiền",
@@ -184,7 +175,7 @@ const ApprovalPost = () => {
         selector: (row) => row.city.name,
         sortable: true,
         wrap: true,
-        width: "180px",
+        width: "160px",
       },
       {
         name: "Quận/huyện",
@@ -196,13 +187,12 @@ const ApprovalPost = () => {
 
       {
         name: "Ngày đăng",
-        selector: (row) => row.created_at,
+        selector: (row) =>
+          moment(row?.created_at).format("DD/MM/YYYY, HH:mm:ss"),
         wrap: true,
         sortable: true,
         width: "180px",
-        format: (row) => moment(row.created_at).format("DD/MM/YYYY, HH:mm:ss"),
       },
-
       {
         button: "true",
         cell: (row) => (
@@ -231,14 +221,13 @@ const ApprovalPost = () => {
         ),
         width: "50px",
       },
-
       {
         button: "true",
         cell: (row) => (
           <button
             onClick={() => {
-              setId(row.id);
               setOpenModal(true);
+              setId(row.id);
             }}
             className="text-danger"
           >
@@ -272,11 +261,34 @@ const ApprovalPost = () => {
             color: "rgb(28 36 52)",
           }}
         >
-          Duyệt bài đăng
+          Danh sách bài đăng đang hiển thị
         </h4>
         <nav>
           <ol className="flex items-center gap-2">
-            <li></li>
+            <li>
+              <Link
+                href="#"
+                onClick={() => fetchData()}
+                style={{ border: "1px solid gray" }}
+                className="flex items-center rounded bg-white px-3 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-black "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-4 h-4 mr-3"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+                  />
+                </svg>
+                Làm mới
+              </Link>
+            </li>
           </ol>
         </nav>
       </div>
@@ -332,6 +344,7 @@ const ApprovalPost = () => {
               <Button
                 color="failure"
                 onClick={() => {
+                  setOpenModal(false);
                   deleteById(id);
                 }}
               >
@@ -348,11 +361,10 @@ const ApprovalPost = () => {
       <ModalDetail
         setOpenModal={setOpenModal1}
         openModal={openModal1}
-        fetchData={fetchData}
         data={post}
       />
     </>
   );
 };
 
-export default ApprovalPost;
+export default ListPostComponent;

@@ -52,9 +52,10 @@ export async function getAllApprovalPost() {
   const res = await supabaseAdmin
     .from("post")
     .select(
-      `id,images,title,cate_c_id(name),price,city(name),district(name),ward(name),users(name),fullname,phone`
+      `*,id,images,title,cate_c_id(name),price,city(name),district(name),ward(name),users(name),fullname,phone`
     )
-    .match({ is_show: true, status: 0 });
+    .match({ is_show: true, status: 0, is_selling: false })
+    .order("created_at", { ascending: false });
 
   return res;
 }

@@ -31,6 +31,8 @@
     "react-data-table-component": "^7.5.4",
     "react-dom": "^18.2.0",
     "react-jvectormap": "^0.0.16",
+    "react-slick": "^0.29.0",
+    "slick-carousel": "^1.8.1",
     "sonner": "^1.2.4",
     "styled-components": "^5.3.3"
   },

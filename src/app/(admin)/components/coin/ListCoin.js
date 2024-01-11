@@ -6,11 +6,13 @@ import { toast } from "sonner";
 import Loading from "@/app/(admin)/components/common/Loading";
 import moment from "moment/moment";
 import { supabase } from "@/supabase/supabase-config";
-import { getAllApprovalPost, getAllPost } from "@/services/PostService";
+import { getAllPost } from "@/services/PostService";
 import Image from "next/image";
-import { formatter } from "@/utilities/utils";
+import { getAllCoinPrice } from "@/services/CoinService";
+import { formatDongCu } from "@/utilities/utils";
+import ModalCreateCoin from "./ModalCreate";
 import { Button, Modal } from "flowbite-react";
-import ModalDetail from "./modal.post";
+import ModalUpdateCoin from "./ModalUpdate";
 
 const customStyles = {
   header: {
@@ -40,7 +42,7 @@ const customStyles = {
         right: "50px",
         backgroundColor: "#fff",
       },
-      "&:nth-last-child(1)": {
+      "&:last-child": {
         position: "sticky",
         right: "0",
         backgroundColor: "#fff",
@@ -63,7 +65,7 @@ const customStyles = {
         right: "50px",
         backgroundColor: "#fff",
       },
-      "&:nth-last-child(1)": {
+      "&:last-child": {
         position: "sticky",
         right: "0",
         backgroundColor: "#fff",
@@ -79,43 +81,37 @@ const paginationComponentOptions = {
   selectAllRowsItemText: "Tất cả",
 };
 
-const ApprovalPost = () => {
+const ListCoinComponent = () => {
+  const [openModalCreate, setOpenModalCreate] = useState(false);
+  const [openUpdateModal, setOpenModalUpdate] = useState(false);
   const [openModal, setOpenModal] = useState(false);
-  const [openModal1, setOpenModal1] = useState(false);
-
-  const [post, setPost] = useState({});
   const [id, setId] = useState(null);
   const [data, setData] = useState([]);
   const [pending, setPending] = useState(true);
 
+  const [coin, setCoin] = useState({});
+
   const fetchData = async () => {
-    const { data, error } = await getAllApprovalPost();
+    const { data, error } = await getAllCoinPrice();
     setData(data);
     setPending(false);
   };
 
-  supabase
-    .channel("post")
-    .on(
-      "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "post" },
-      fetchData
-    )
-    .on(
-      "postgres_changes",
-      { event: "DELETE", schema: "public", table: "post" },
-      fetchData
-    )
-    .subscribe();
+  const formatter = new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  });
 
   const deleteById = async (id) => {
-    const { error } = await supabase.from("post").delete().eq("id", id);
+    const { error } = await supabase
+      .from("exchange_coin")
+      .delete()
+      .eq("id", id);
     fetchData();
+    setOpenModal(false);
     if (!error) {
-      setOpenModal(false);
       toast.success("Xoá thành công");
     } else {
-      setOpenModal(false);
       toast.error(`Lỗi! ${error.message}`);
     }
   };
@@ -126,119 +122,71 @@ const ApprovalPost = () => {
   const columns = useMemo(
     () => [
       {
-        name: "Hình ảnh",
-        wrap: true,
-        width: "120px",
-        cell: (row) => (
-          <div className="py-2">
-            <Image
-              src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${row.images[0]}`}
-              width={120}
-              height={50}
-              style={{ height: "70px", objectFit: "cover" }}
-            />
-          </div>
-        ),
-      },
-      {
-        name: "Tên liên hệ",
-        selector: (row) => row.users.name,
-        sortable: true,
-        wrap: true,
-        width: "150px",
-      },
-      {
-        name: "Điện thoại",
-        selector: (row) => row.phone,
-        sortable: true,
+        name: "Giá tiền",
         wrap: true,
         width: "130px",
-      },
-      {
-        name: "Chủ đề",
-        selector: (row) => row.cate_c_id.name,
         sortable: true,
-        wrap: true,
-        width: "120px",
-      },
-      {
-        name: "Tiêu đề",
-        selector: (row) => row.title,
-        sortable: true,
-        wrap: true,
-        width: "180px",
-      },
-      {
-        name: "Giá tiền",
-        selector: (row) => (
-          <span className="text-danger" style={{ fontWeight: "bold" }}>
-            {formatter.format(row.price)}
-          </span>
-        ),
-        sortable: true,
-        wrap: true,
-        width: "120px",
-      },
-      {
-        name: "Tỉnh/thành",
-        selector: (row) => row.city.name,
-        sortable: true,
-        wrap: true,
-        width: "180px",
-      },
-      {
-        name: "Quận/huyện",
-        selector: (row) => row.district.name,
-        sortable: true,
-        wrap: true,
-        width: "180px",
+        selector: (row) => formatter.format(row.price),
       },
 
       {
-        name: "Ngày đăng",
+        name: "Đồng Cũ",
+        wrap: true,
+        sortable: true,
+        width: "100px",
+        selector: (row) => formatDongCu(row.coin),
+      },
+
+      {
+        name: "Ngày tạo",
         selector: (row) => row.created_at,
         wrap: true,
         sortable: true,
-        width: "180px",
+        width: "220px",
         format: (row) => moment(row.created_at).format("DD/MM/YYYY, HH:mm:ss"),
+      },
+      {
+        name: "Ngày cập nhập",
+        selector: (row) =>
+          row.updated_at
+            ? moment(row.updated_at).format("DD/MM/YYYY, HH:mm:ss")
+            : "",
+        wrap: true,
+        sortable: true,
+        width: "220px",
       },
 
       {
         button: "true",
         cell: (row) => (
-          <button
-            style={{ color: "green" }}
+          <Link
             onClick={() => {
-              setOpenModal1(true);
-              setPost(row);
+              setCoin(row);
+              setOpenModalUpdate(true);
             }}
+            href={`#`}
+            style={{ color: "green" }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              fill="none"
               viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
+              fill="currentColor"
               className="w-6 h-6"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12"
-              />
+              <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
+              <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
             </svg>
-          </button>
+          </Link>
         ),
         width: "50px",
       },
-
       {
         button: "true",
         cell: (row) => (
           <button
             onClick={() => {
-              setId(row.id);
               setOpenModal(true);
+              setId(row.id);
             }}
             className="text-danger"
           >
@@ -272,11 +220,33 @@ const ApprovalPost = () => {
             color: "rgb(28 36 52)",
           }}
         >
-          Duyệt bài đăng
+          Bảng giá quy đổi Đồng Cũ
         </h4>
         <nav>
           <ol className="flex items-center gap-2">
-            <li></li>
+            <li>
+              <Link
+                onClick={() => setOpenModalCreate(true)}
+                href={"#"}
+                className="flex items-center rounded bg-primary px-3 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white hover:bg-primary-600 "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="w-4 h-4 mr-3"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4.5v15m7.5-7.5h-15"
+                  />
+                </svg>
+                Thêm mới
+              </Link>
+            </li>
           </ol>
         </nav>
       </div>
@@ -300,6 +270,11 @@ const ApprovalPost = () => {
           />
         )}
       </div>
+      <ModalCreateCoin
+        openModal={openModalCreate}
+        setOpenModal={setOpenModalCreate}
+        fetchData={fetchData}
+      />
 
       <Modal
         show={openModal}
@@ -326,7 +301,7 @@ const ApprovalPost = () => {
             </svg>
 
             <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-              Bạn có chắc muốn xoá tin đăng này?
+              Bạn có chắc muốn xoá gói nạp này?
             </h3>
             <div className="flex justify-center gap-4">
               <Button
@@ -345,14 +320,14 @@ const ApprovalPost = () => {
         </Modal.Body>
       </Modal>
 
-      <ModalDetail
-        setOpenModal={setOpenModal1}
-        openModal={openModal1}
+      <ModalUpdateCoin
+        setOpenModal={setOpenModalUpdate}
+        openModal={openUpdateModal}
+        data={coin}
         fetchData={fetchData}
-        data={post}
       />
     </>
   );
 };
 
-export default ApprovalPost;
+export default ListCoinComponent;

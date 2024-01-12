@@ -154,7 +154,14 @@ const ListPostComponent = () => {
       },
       {
         name: "Tiêu đề",
-        selector: (row) => row.title,
+        selector: (row) => (
+          <div className="flex flex-col">
+            <span>{row.title}</span>
+            <span className="text-danger mt-2">
+              {row.is_featured ? "Tin nổi bật" : ""}
+            </span>
+          </div>
+        ),
         sortable: true,
         wrap: true,
         width: "210px",
@@ -163,7 +170,7 @@ const ListPostComponent = () => {
         name: "Giá tiền",
         selector: (row) => (
           <span className="text-danger" style={{ fontWeight: "bold" }}>
-            {formatter.format(row.price)}
+            {row.price ? formatter.format(row.price) : "Thoả thuận"}
           </span>
         ),
         sortable: true,

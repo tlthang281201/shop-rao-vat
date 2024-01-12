@@ -172,7 +172,7 @@ const ApprovalPost = () => {
         name: "Giá tiền",
         selector: (row) => (
           <span className="text-danger" style={{ fontWeight: "bold" }}>
-            {formatter.format(row.price)}
+            {row.price ? formatter.format(row.price) : "Thoả thuận"}
           </span>
         ),
         sortable: true,

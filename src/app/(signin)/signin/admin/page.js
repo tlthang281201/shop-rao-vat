@@ -48,7 +48,7 @@ const SignIn = () => {
       if (data.length > 0) {
         if (data[0].active) {
           setCookie("admin", data[0]);
-          router.push("/admin");
+          router.push("/admin/interface/slide");
         } else {
           setLoading(false);
           setErrors("Tài khoản của bạn đã bị quản trị viên đình chỉ hoạt động");

@@ -1,11 +1,57 @@
+"use client";
+import { supabase } from "@/supabase/supabase-config";
 import { formatter } from "@/utilities/utils";
 import { Button, Modal, TextInput } from "flowbite-react";
 import React, { useState } from "react";
+import { toast } from "sonner";
 
-const ModalDetail = ({ openModal, setOpenModal, data }) => {
+const ModalDetail = ({ openModal, setOpenModal, data, fetchData }) => {
   const [reason, setReason] = useState(null);
+  const [loading, setLoading] = useState(false);
+  console.log(data);
+  const approvalRequest = async (val) => {
+    setLoading(true);
+    if (val === 2) {
+      if (reason) {
+        const { error } = await supabase
+          .from("withdraw_history")
+          .update({ status: val, reject_reason: reason })
+          .eq("id", data?.id);
+        fetchData();
+        setReason(null);
+        setOpenModal(false);
+        toast.success("Cập nhập thành công");
+      } else {
+        toast.error("Vui lòng nhập lí do từ tối");
+      }
+    } else {
+      const { error } = await supabase
+        .from("withdraw_history")
+        .update({ status: val })
+        .eq("id", data?.id);
+      const res = await supabase
+        .from("users")
+        .select()
+        .eq("id", data?.user_id?.id)
+        .single();
+      const res2 = await supabase
+        .from("users")
+        .update({ cash_wallet: res.data.cash_wallet - data?.cash })
+        .eq("id", data?.user_id?.id);
+      fetchData();
+      setReason(null);
+      setOpenModal(false);
+      toast.success("Cập nhập thành công");
+    }
+    setLoading(false);
+  };
+
   return (
-    <Modal show={openModal} onClose={() => setOpenModal(false)}>
+    <Modal
+      show={openModal}
+      style={{ zIndex: 9999 }}
+      onClose={() => setOpenModal(false)}
+    >
       <Modal.Header>Chi tiết</Modal.Header>
       <Modal.Body className="space-y-6">
         <p style={{ color: "black" }}>ID Giao dịch: {data?.id}</p>
@@ -114,10 +160,71 @@ const ModalDetail = ({ openModal, setOpenModal, data }) => {
             type="text"
             className="w-full"
             color="failure"
+            onChange={(e) => setReason(e.target.value)}
             placeholder="Lí do từ chối"
           />
         </div>
-        <div></div>
+        <div className="flex justify-between text-sm font-medium text-gray-500 dark:text-gray-300">
+          <div></div>
+          <div className="flex flex-row gap-2">
+            <Button
+              color="light"
+              onClick={() => setOpenModal(false)}
+              disabled={loading}
+            >
+              Đóng
+            </Button>
+            <div className="flex flex-row">
+              <Button
+                color="failure"
+                onClick={() => approvalRequest(2)}
+                disabled={loading}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5 me-1"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"
+                  />
+                </svg>
+                Từ chối
+              </Button>
+            </div>
+
+            <div className="">
+              <Button
+                color="success"
+                className="text-xs"
+                onClick={() => approvalRequest(1)}
+                isProcessing={loading}
+                disabled={loading}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5 me-1"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m4.5 12.75 6 6 9-13.5"
+                  />
+                </svg>
+                Duyệt
+              </Button>
+            </div>
+          </div>
+        </div>
       </Modal.Body>
     </Modal>
   );

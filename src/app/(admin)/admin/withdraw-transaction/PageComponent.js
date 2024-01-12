@@ -67,7 +67,7 @@ const PageComponent = () => {
   const fetchData = async () => {
     const { data, error } = await supabase
       .from("withdraw_history")
-      .select(`*,user_id(name)`)
+      .select(`*,user_id(id,name)`)
       .eq("status", 0)
       .order("created_at", { ascending: false });
     setData(data);
@@ -216,6 +216,7 @@ const PageComponent = () => {
       <ModalDetail
         openModal={openModal}
         setOpenModal={setOpenModal}
+        fetchData={fetchData}
         data={request}
       />
     </>

@@ -99,7 +99,7 @@ const ModalDetail = ({ openModal, setOpenModal, fetchData, data }) => {
                 <span>{data?.cate_c_id?.name}</span>
                 <span>{data?.users?.name}</span>
                 <span style={{ color: "red", fontSize: "17px" }}>
-                  {formatter.format(data?.price)}
+                  {data?.price ? formatter.format(data?.price) : "Thoả thuận"}
                 </span>
               </div>
               <div

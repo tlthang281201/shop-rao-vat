@@ -152,7 +152,7 @@ const ModalCreateSlide = ({ openModal, setOpenModal, fetchData }) => {
             <Textarea
               id="des"
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Mô tả danh mục.."
+              placeholder="Mô tả.."
               rows={4}
             />
           </div>

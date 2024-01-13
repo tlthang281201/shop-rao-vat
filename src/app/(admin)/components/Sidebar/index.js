@@ -3,9 +3,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import SidebarLinkGroup from "./SidebarLinkGroup";
+import { getCookie } from "cookies-next";
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const pathname = usePathname();
-
+  const [admin, setAdmin] = useState(null);
   const trigger = useRef(null);
   const sidebar = useRef(null);
 
@@ -13,7 +14,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const [sidebarExpanded, setSidebarExpanded] = useState(
     storedSidebarExpanded === null ? false : storedSidebarExpanded === "true"
   );
-
+  const getAdmin = async () => {
+    const data = getCookie("admin");
+    setAdmin(JSON.parse(data));
+    console.log(JSON.parse(data));
+  };
+  useEffect(() => {
+    getAdmin();
+  }, []);
   // close on click outside
   useEffect(() => {
     const clickHandler = ({ target }) => {
@@ -299,7 +307,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             </ul>
           </div>
 
-          <div>
+          {/* <div>
             <h3 className="mb-4 ml-4 text-md font-semibold text-bodydark2">
               Quản trị
             </h3>
@@ -359,7 +367,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           <div>
             <h3 className="mb-4 ml-4 text-md font-semibold text-bodydark2">

@@ -111,7 +111,15 @@ const ListUserComponent = () => {
       },
       {
         name: "Điện thoại",
-        selector: (row) => <div>{row.phone ? row.phone : "Chưa cập nhập"}</div>,
+        selector: (row) => (
+          <div>
+            {row.phone ? (
+              row.phone
+            ) : (
+              <span style={{ color: "red" }}>Chưa cập nhập</span>
+            )}
+          </div>
+        ),
         wrap: true,
         width: "130px",
       },
@@ -119,7 +127,13 @@ const ListUserComponent = () => {
       {
         name: "Thành phố",
         selector: (row) => (
-          <div>{row.city?.name ? row.city?.name : "Chưa cập nhập"}</div>
+          <div>
+            {row.city?.name ? (
+              row.city?.name
+            ) : (
+              <span style={{ color: "red" }}>Chưa cập nhập</span>
+            )}
+          </div>
         ),
         wrap: true,
         sortable: true,
@@ -128,7 +142,13 @@ const ListUserComponent = () => {
       {
         name: "Quận/huyện",
         selector: (row) => (
-          <div>{row.district?.name ? row.district?.name : "Chưa cập nhập"}</div>
+          <div>
+            {row.district?.name ? (
+              row.district?.name
+            ) : (
+              <span style={{ color: "red" }}>Chưa cập nhập</span>
+            )}
+          </div>
         ),
         wrap: true,
         sortable: true,
@@ -137,7 +157,13 @@ const ListUserComponent = () => {
       {
         name: "Phường/Xã",
         selector: (row) => (
-          <div>{row.ward?.name ? row.ward?.name : "Chưa cập nhập"}</div>
+          <div>
+            {row.ward?.name ? (
+              row.ward?.name
+            ) : (
+              <span style={{ color: "red" }}>Chưa cập nhập</span>
+            )}
+          </div>
         ),
         wrap: true,
         sortable: true,

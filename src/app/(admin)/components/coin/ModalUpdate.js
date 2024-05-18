@@ -61,7 +61,12 @@ const ModalUpdateCoin = ({ openModal, setOpenModal, fetchData, data }) => {
     } else {
       const { error } = await supabaseAdmin
         .from("exchange_coin")
-        .update({ price: price, coin: coin, active: true })
+        .update({
+          price: price,
+          coin: coin,
+          active: true,
+          updated_at: new Date(),
+        })
         .eq("id", data?.id);
       if (!error) {
         toast.success("Cập nhập thành công");
@@ -118,7 +123,7 @@ const ModalUpdateCoin = ({ openModal, setOpenModal, fetchData, data }) => {
             </div>
             <CurrencyInput
               value={coin}
-              suffix="  VNĐ"
+              suffix="  Đồng Cũ"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               onValueChange={(value) => {
                 validateCoin(value);

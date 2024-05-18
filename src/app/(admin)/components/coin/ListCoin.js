@@ -133,7 +133,7 @@ const ListCoinComponent = () => {
         name: "Đồng Cũ",
         wrap: true,
         sortable: true,
-        width: "100px",
+        width: "150px",
         selector: (row) => formatDongCu(row.coin),
       },
 
